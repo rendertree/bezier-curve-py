@@ -165,7 +165,7 @@ def main():
         ball.draw()
         end_mode2d()
 
-        is_reset_ball = draw_button("Reset Ball",   Rectangle(get_screen_width() - 120, 120, 100, 32))
+        is_reset_ball   = draw_button("Reset Ball",   Rectangle(get_screen_width() - 120, 120, 100, 32))
         is_reset_points = draw_button("Reset Points", Rectangle(get_screen_width() - 120, 80, 100, 32))
         draw_text("Bézier curve", 20, 10, 24, BLACK)
         draw_text("by Wildan R Wijanarko", 45, 38, 12, BLACK)
