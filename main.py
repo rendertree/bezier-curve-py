@@ -29,7 +29,7 @@ class Point:
         self.name  = name
     
     def draw(self):
-        pos = "x: " + str(self.pos.x) + " " + "y: " + str(self.pos.y)
+        pos = "x: " + str(round(self.pos.x, 2)) + " " + "y: " + str(round(self.pos.y, 2))
         draw_circle(self.pos.x, self.pos.y, self.size, self.color)
         draw_text(self.name, self.pos.x - 5, self.pos.y - 5, 15, BLACK)
         draw_text(pos, self.pos.x + 25, self.pos.y + 10, 12, BLACK)
