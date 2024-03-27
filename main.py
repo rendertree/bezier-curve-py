@@ -61,6 +61,29 @@ class Slider():
     
         return slider_value
 
+class RLCamera(Camera2D):
+    def __init__(self):
+        self.target   = Vector2(0, 0)
+        self.offset   = Vector2(200.0, 200.0)
+        self.rotation = 0.0
+        self.zoom     = 1.0
+
+    def begin_mode(self):
+        begin_mode2d(self)
+
+    def end_mode(self):
+        end_mode2d()
+
+        return self
+
+    def update(self, target):
+        self.target = target
+
+        if get_mouse_wheel_move() > 0.0 and self.zoom < 3.0:
+            self.zoom += 0.1
+        if get_mouse_wheel_move() < 0.0 and self.zoom > 0.0:
+            self.zoom -= 0.1
+
 def bezier(p0, p1, p2, p3, t):
     a = vector2_lerp(p0, p1, t)
     b = vector2_lerp(p1, p2, t)
@@ -123,11 +146,7 @@ def main():
     init_window(screen_width, screen_height, "Bézier curve")
     set_target_fps(120)
     
-    camera = Camera2D()
-    camera.target   = Vector2(0, 0)
-    camera.offset   = Vector2(200.0, 200.0)
-    camera.rotation = 0.0
-    camera.zoom     = 1.0
+    camera = RLCamera()
 
     p0 = Point(Vector2(100, 200), int(20), LIME, str("P0"))
     p1 = Point(Vector2(80,  100), int(20), LIME, str("P1"))
@@ -171,7 +190,7 @@ def main():
     points_lines_color = GOLD
     abcde_lines_color = PURPLE
     is_generate_colors = False
-    color_length = 11
+    colors_length = 11
 
     while not window_should_close():
     #----------------------------------------------------------------
@@ -188,11 +207,11 @@ def main():
         #----------------------------------------------------------------
         # Generate colors
         if is_generate_colors:
-            ball_color          = colors[get_random_value(0, color_length)]
-            points_color        = colors[get_random_value(0, color_length)]
-            abcde_color         = colors[get_random_value(0, color_length)]
-            points_lines_color  = colors[get_random_value(0, color_length)]
-            abcde_lines_color   = colors[get_random_value(0, color_length)]
+            ball_color          = colors[get_random_value(0, colors_length)]
+            points_color        = colors[get_random_value(0, colors_length)]
+            abcde_color         = colors[get_random_value(0, colors_length)]
+            points_lines_color  = colors[get_random_value(0, colors_length)]
+            abcde_lines_color   = colors[get_random_value(0, colors_length)]
 
         #----------------------------------------------------------------
         # Pause button
@@ -270,6 +289,8 @@ def main():
         d = vector2_lerp(a, b, t)
         e = vector2_lerp(b, c, t)
 
+        # camera.update(ball.pos)
+
         begin_drawing()
         #----------------------------------------------------------------
 
@@ -285,7 +306,7 @@ def main():
         # ........:::..:::::..::..:::::..:::...::...:::::::.......:::........::::......:::........:::......::::::..::::::......:::
         
         #----------------------------------------------------------------
-        begin_mode2d(camera)
+        camera.begin_mode()
 
         #----------------------------------------------------------------
         # Draw the control points
@@ -320,7 +341,7 @@ def main():
                 draw_line_v(d, e, abcde_lines_color)
 
         #----------------------------------------------------------------
-        end_mode2d()
+        camera.end_mode()
 
         # '########::'########:::::'###::::'##:::::'##:::::'######:::'##::::'##:'####:
         # ##.... ##: ##.... ##:::'## ##::: ##:'##: ##::::'##... ##:: ##:::: ##:. ##::
@@ -342,7 +363,7 @@ def main():
         is_ball_manual_mode = draw_checkbox("Manual Mode",      Rectangle(10, 90 + 40 * 0, 32, 32), is_ball_manual_mode)
         is_draw_abcde = draw_checkbox("Draw abcde",             Rectangle(10, 90 + 40 * 1, 32, 32), is_draw_abcde)
         is_draw_abcde_line = draw_checkbox("Draw abcde line",   Rectangle(10, 90 + 40 * 2, 32, 32), is_draw_abcde_line)
-        is_ball_pause = draw_checkbox("Puase",                  Rectangle(10, 90 + 40 * 3, 32, 32), is_ball_pause)
+        is_ball_pause = draw_checkbox("Pause",                  Rectangle(10, 90 + 40 * 3, 32, 32), is_ball_pause)
 
         #----------------------------------------------------------------
         # Draw the slider
