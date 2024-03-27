@@ -151,7 +151,7 @@ def main():
     is_draw_abcde = True
     is_draw_abcde_line = True
 
-    t = 0.0 # In a Bézier curve, "t" represents a parameter that varies between 0 and 1, determining a point along the curve.   
+    t = 0.0 # In a Bézier curve, "t" represents a parameter that varies between 0.0 and 1.0, determining a point along the curve   
     at = 0.0 # Automatic "t"
     mt = 0.0 # Manual "t"
 
