@@ -1,3 +1,3 @@
 # bezier-curve-py
 
-https://github.com/rendertree/bezier-curve-py/assets/32849384/c346ab7f-5355-4fcd-9d5a-affc88d793f2
+https://github.com/rendertree/bezier-curve-py/assets/32849384/74d2f025-ccf3-4caa-afa7-c94754b33b89
