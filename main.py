@@ -151,13 +151,16 @@ def main():
     is_draw_abcde = True
     is_draw_abcde_line = True
 
-    t = 0.0 # "t" represents a parameter that varies between 0.0 and 1.0   
+    t = 0.0 # In a Bézier curve, "t" represents a parameter that varies between 0 and 1, determining a point along the curve.   
     at = 0.0 # Automatic "t"
     mt = 0.0 # Manual "t"
 
     slider_mt = Slider(Rectangle(50, get_screen_height() // 2 - 10, 150, 30))
 
     while not window_should_close():
+        if is_key_pressed(KEY_P):
+            is_ball_pause = not is_ball_pause
+
         delta_time = 0.3 * get_frame_time()      
         if not is_ball_pause and not is_ball_manual_mode:
             mt = t
@@ -254,8 +257,12 @@ def main():
         is_ball_manual_mode = draw_checkbox("Manual Mode",      Rectangle(10, 90 + 40 * 0, 32, 32), is_ball_manual_mode)
         is_draw_abcde = draw_checkbox("Draw abcde",             Rectangle(10, 90 + 40 * 1, 32, 32), is_draw_abcde)
         is_draw_abcde_line = draw_checkbox("Draw abcde line",   Rectangle(10, 90 + 40 * 2, 32, 32), is_draw_abcde_line)
+        is_ball_pause = draw_checkbox("Draw ball pause",        Rectangle(10, 90 + 40 * 3, 32, 32), is_ball_pause)
 
         mt = slider_mt.draw(mt)
+
+        if is_ball_pause:
+            draw_text("Paused", get_screen_width() / 2 - 100, 50, 44, RED)
 
         draw_text("Bézier curve", 20, 10, 24, BLACK)
         draw_text("by Wildan R Wijanarko", 45, 38, 12, BLACK)
