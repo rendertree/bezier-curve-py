@@ -34,6 +34,33 @@ class Point:
         draw_text(self.name, self.pos.x - 5, self.pos.y - 5, 15, BLACK)
         draw_text(pos, self.pos.x + 25, self.pos.y + 10, 12, BLACK)
 
+class Slider():
+    def __init__(self, rec):
+        self._is_dragging = False     
+        self.rec = rec
+        
+    def draw(self, value):
+        slider_value = value
+        offset_x = 0
+
+        mouse_pos = get_mouse_position()
+
+        if self._is_dragging:
+            slider_value = (mouse_pos.x - self.rec.x - offset_x) / self.rec.width
+            slider_value = max(0.0, min(1.0, slider_value))
+
+        if check_collision_point_rec(mouse_pos, self.rec) and is_mouse_button_pressed(MOUSE_LEFT_BUTTON):
+            self._is_dragging = True
+            offset_x = mouse_pos.x - self.rec.x - (slider_value * self.rec.width)
+
+        if is_mouse_button_released(MOUSE_LEFT_BUTTON):
+            self._is_dragging = False
+            
+        draw_rectangle_rec(self.rec, LIGHTGRAY)
+        draw_rectangle(self.rec.x + int(slider_value * self.rec.width) - 10, self.rec.y, 20, self.rec.height, DARKPURPLE)
+    
+        return slider_value
+
 def bezier(p0, p1, p2, p3, t):
     a = vector2_lerp(p0, p1, t)
     b = vector2_lerp(p1, p2, t)
@@ -115,8 +142,8 @@ def main():
     
     ball = Point(Vector2(100.0 * 1.5, 200.0 * 2.0), int(12), BLUE, str("Ball"))
     is_ball_pause = False
+    is_ball_manual_mode = False
     is_ball_forward = True
-    t = 0.0
 
     is_reset_ball = False
     is_reset_points = False
@@ -124,21 +151,33 @@ def main():
     is_draw_abcde = True
     is_draw_abcde_line = True
 
+    t = 0.0 # In a Bézier curve, "t" represents a parameter that varies between 0 and 1, determining a point along the curve.   
+    at = 0.0 # Automatic "t"
+    mt = 0.0 # Manual "t"
+
+    slider_mt = Slider(Rectangle(50, get_screen_height() // 2 - 10, 150, 30))
+
     while not window_should_close():
         delta_time = 0.3 * get_frame_time()      
-        if not is_ball_pause:
+        if not is_ball_pause and not is_ball_manual_mode:
+            mt = t
             if is_ball_forward:
-                if t < 1.0:
-                    t += delta_time
+                if at < 1.0:
+                    at += delta_time
                 else:
-                    t = 1.0
+                    at = 1.0
                     is_ball_forward = False
             else:
-                if t > 0.0 and not is_ball_pause:
-                    t -= delta_time
+                if at > 0.0 and not is_ball_pause:
+                    at -= delta_time
                 else:
-                    t = 0.0
+                    at = 0.0
                     is_ball_forward = True
+
+        if is_ball_manual_mode:
+            t = mt
+        else:
+            t = at
 
         new_ball_pos = bezier(p0.pos, p1.pos, p2.pos, p3.pos, t)
         ball.pos = new_ball_pos
@@ -212,8 +251,11 @@ def main():
         is_reset_ball = draw_button("Reset Ball", Rectangle(get_screen_width() - 120, 120, 100, 32))
         is_reset_points = draw_button("Reset Points", Rectangle(get_screen_width() - 120, 80, 100, 32))
 
-        is_draw_abcde = draw_checkbox("Draw abcde", Rectangle(10, 120, 32, 32), is_draw_abcde)
-        is_draw_abcde_line = draw_checkbox("Draw abcde line", Rectangle(10, 120 + 40, 32, 32), is_draw_abcde_line)
+        is_ball_manual_mode = draw_checkbox("Manual Mode",      Rectangle(10, 90 + 40 * 0, 32, 32), is_ball_manual_mode)
+        is_draw_abcde = draw_checkbox("Draw abcde",             Rectangle(10, 90 + 40 * 1, 32, 32), is_draw_abcde)
+        is_draw_abcde_line = draw_checkbox("Draw abcde line",   Rectangle(10, 90 + 40 * 2, 32, 32), is_draw_abcde_line)
+
+        mt = slider_mt.draw(mt)
 
         draw_text("Bézier curve", 20, 10, 24, BLACK)
         draw_text("by Wildan R Wijanarko", 45, 38, 12, BLACK)
