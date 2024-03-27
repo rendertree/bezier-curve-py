@@ -191,6 +191,7 @@ def main():
     abcde_lines_color = PURPLE
     is_generate_colors = False
     colors_length = 11
+    is_blinking_mode = False
 
     while not window_should_close():
     #----------------------------------------------------------------
@@ -206,7 +207,7 @@ def main():
 
         #----------------------------------------------------------------
         # Generate colors
-        if is_generate_colors:
+        if is_generate_colors or is_blinking_mode:
             ball_color          = colors[get_random_value(0, colors_length)]
             points_color        = colors[get_random_value(0, colors_length)]
             abcde_color         = colors[get_random_value(0, colors_length)]
@@ -364,6 +365,7 @@ def main():
         is_draw_abcde = draw_checkbox("Draw abcde",             Rectangle(10, 90 + 40 * 1, 32, 32), is_draw_abcde)
         is_draw_abcde_line = draw_checkbox("Draw abcde line",   Rectangle(10, 90 + 40 * 2, 32, 32), is_draw_abcde_line)
         is_ball_pause = draw_checkbox("Pause",                  Rectangle(10, 90 + 40 * 3, 32, 32), is_ball_pause)
+        is_blinking_mode = draw_checkbox("Blinking Mode",       Rectangle(10, 90 + 40 * 4, 32, 32), is_blinking_mode)
 
         #----------------------------------------------------------------
         # Draw the slider
