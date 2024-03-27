@@ -56,7 +56,7 @@ def draw_points(points):
     for i in range(0, 5):
         points[i].draw()
         next_index = (i + 1) % 5 # Wrap around to the first point for the last connection
-        draw_line(points[i].pos.x, points[i].pos.y, points[next_index].pos.x, points[next_index].pos.y, GREEN)
+        draw_line(points[i].pos.x, points[i].pos.y, points[next_index].pos.x, points[next_index].pos.y, GOLD)
 
 def draw_button(text, button_rec):
     mouse_pos = get_mouse_position()
@@ -73,6 +73,21 @@ def draw_button(text, button_rec):
 
     return is_mouse_over and is_mouse_button_pressed(MOUSE_LEFT_BUTTON)
 
+def draw_checkbox(text, rec, flag):
+    mouse_pos = get_mouse_position()
+    is_mouse_over = check_collision_point_rec(mouse_pos, rec)
+
+    if flag:
+        draw_rectangle_rec(rec, DARKBLUE)
+
+    draw_rectangle_lines_ex(rec, 4, BLACK)
+    draw_text(text, rec.x + 35, rec.y + 20, 12, BLACK)
+
+    if is_mouse_over and is_mouse_button_pressed(MOUSE_LEFT_BUTTON):
+        flag = not flag
+
+    return flag
+
 def main():
     init_window(1080, 720, "Bézier curve")
     set_target_fps(120)
@@ -83,10 +98,10 @@ def main():
     camera.rotation = 0.0
     camera.zoom     = 1.0
 
-    p0 = Point(Vector2(100, 200), int(20), GREEN, str("p0"))
-    p1 = Point(Vector2(80,  100), int(20), GREEN, str("p1"))
-    p2 = Point(Vector2(320, 100), int(20), GREEN, str("p2"))
-    p3 = Point(Vector2(300, 200), int(20), GREEN, str("p3"))
+    p0 = Point(Vector2(100, 200), int(20), LIME, str("P0"))
+    p1 = Point(Vector2(80,  100), int(20), LIME, str("P1"))
+    p2 = Point(Vector2(320, 100), int(20), LIME, str("P2"))
+    p3 = Point(Vector2(300, 200), int(20), LIME, str("P3"))
 
     points = [p0, p0, p1, p2, p3]
     point_radius = float(0.0)
@@ -98,13 +113,16 @@ def main():
     for i in range(0, 5):
         points[i].id = i
     
-    ball = Point(Vector2(100.0 * 1.5, 200.0 * 2.0), int(20), BLUE, str("Ball"))
+    ball = Point(Vector2(100.0 * 1.5, 200.0 * 2.0), int(12), BLUE, str("Ball"))
     is_ball_pause = False
     is_ball_forward = True
     t = 0.0
 
     is_reset_ball = False
     is_reset_points = False
+
+    is_draw_abcde = True
+    is_draw_abcde_line = True
 
     while not window_should_close():
         delta_time = 0.3 * get_frame_time()      
@@ -156,17 +174,47 @@ def main():
             p2.pos = Vector2(320, 100)
             p3.pos = Vector2(300, 200)
 
+        a = vector2_lerp(p0.pos, p1.pos, t)
+        b = vector2_lerp(p1.pos, p2.pos, t)
+        c = vector2_lerp(p2.pos, p3.pos, t)   
+        d = vector2_lerp(a, b, t)
+        e = vector2_lerp(b, c, t)
+
         begin_drawing()
         clear_background(RAYWHITE)
 
         begin_mode2d(camera)
+
         draw_points(points)
         draw_bezier(p0, p1, p2, p3)
         ball.draw()
+
+        if is_draw_abcde:
+            draw_circle(a.x, a.y, 7, PINK)
+            draw_circle(b.x, b.y, 7, PINK)
+            draw_circle(c.x, c.y, 7, PINK)
+            draw_circle(d.x, d.y, 7, PINK)
+            draw_circle(e.x, e.y, 7, PINK)
+
+            draw_text("A", a.x, a.y, 14, BLACK)
+            draw_text("B", b.x, b.y, 14, BLACK)
+            draw_text("C", c.x, c.y, 14, BLACK)
+            draw_text("D", d.x, d.y, 14, BLACK)
+            draw_text("E", e.x, e.y, 14, BLACK)
+            
+            if is_draw_abcde_line: 
+                draw_line_v(a, b, PURPLE)
+                draw_line_v(b, c, PURPLE)
+                draw_line_v(d, e, PURPLE)
+
         end_mode2d()
 
-        is_reset_ball   = draw_button("Reset Ball",   Rectangle(get_screen_width() - 120, 120, 100, 32))
+        is_reset_ball = draw_button("Reset Ball", Rectangle(get_screen_width() - 120, 120, 100, 32))
         is_reset_points = draw_button("Reset Points", Rectangle(get_screen_width() - 120, 80, 100, 32))
+
+        is_draw_abcde = draw_checkbox("Draw abcde", Rectangle(10, 120, 32, 32), is_draw_abcde)
+        is_draw_abcde_line = draw_checkbox("Draw abcde line", Rectangle(10, 120 + 40, 32, 32), is_draw_abcde_line)
+
         draw_text("Bézier curve", 20, 10, 24, BLACK)
         draw_text("by Wildan R Wijanarko", 45, 38, 12, BLACK)
         draw_fps(get_screen_width() - 80, 10)
