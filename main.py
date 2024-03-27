@@ -79,11 +79,12 @@ def draw_bezier(p0, p1, p2, p3):
         draw_line_v(point1, point2, BLACK)
         t += 0.01
 
-def draw_points(points):
+def draw_points(points, points_color, lines_color):
     for i in range(0, 5):
+        points[i].color = points_color
         points[i].draw()
         next_index = (i + 1) % 5 # Wrap around to the first point for the last connection
-        draw_line(points[i].pos.x, points[i].pos.y, points[next_index].pos.x, points[next_index].pos.y, GOLD)
+        draw_line(points[i].pos.x, points[i].pos.y, points[next_index].pos.x, points[next_index].pos.y, lines_color)
 
 def draw_button(text, button_rec):
     mouse_pos = get_mouse_position()
@@ -116,9 +117,12 @@ def draw_checkbox(text, rec, flag):
     return flag
 
 def main():
-    init_window(1080, 720, "Bézier curve")
-    set_target_fps(120)
+    screen_width = 1080
+    screen_height = 720
 
+    init_window(screen_width, screen_height, "Bézier curve")
+    set_target_fps(120)
+    
     camera = Camera2D()
     camera.target   = Vector2(0, 0)
     camera.offset   = Vector2(200.0, 200.0)
@@ -151,16 +155,52 @@ def main():
     is_draw_abcde = True
     is_draw_abcde_line = True
 
-    t = 0.0 # In a Bézier curve, "t" represents a parameter that varies between 0.0 and 1.0, determining a point along the curve   
+    # In a Bézier curve, "t" represents a parameter that varies between 0.0 and 1.0, determining a point along the curve   
+    t = 0.0
     at = 0.0 # Automatic "t"
     mt = 0.0 # Manual "t"
 
-    slider_mt = Slider(Rectangle(50, get_screen_height() // 2 - 10, 150, 30))
+    slider_mt_pos = Vector2(50, screen_height / 2 - 10)
+    slider_mt = Slider(Rectangle(slider_mt_pos.x, slider_mt_pos.y, 150, 30))
+
+    # Objects colors
+    colors = [RED, GREEN, BLUE, YELLOW, BROWN, LIME, PINK, PURPLE, GOLD, DARKBLUE, DARKPURPLE, DARKGRAY]
+    ball_color = BLUE
+    points_color = LIME
+    abcde_color = PINK
+    points_lines_color = GOLD
+    abcde_lines_color = PURPLE
+    is_generate_colors = False
+    color_length = 11
 
     while not window_should_close():
+    #----------------------------------------------------------------
+    
+        # '##::::'##:'########::'########:::::'###::::'########:'########:
+        # ##:::: ##: ##.... ##: ##.... ##:::'## ##:::... ##..:: ##.....::
+        # ##:::: ##: ##:::: ##: ##:::: ##::'##:. ##::::: ##:::: ##:::::::
+        # ##:::: ##: ########:: ##:::: ##:'##:::. ##:::: ##:::: ######:::
+        # ##:::: ##: ##.....::: ##:::: ##: #########:::: ##:::: ##...::::
+        # ##:::: ##: ##:::::::: ##:::: ##: ##.... ##:::: ##:::: ##:::::::
+        # . #######:: ##:::::::: ########:: ##:::: ##:::: ##:::: ########:
+        # :.......:::..:::::::::........:::..:::::..:::::..:::::........::
+
+        #----------------------------------------------------------------
+        # Generate colors
+        if is_generate_colors:
+            ball_color          = colors[get_random_value(0, color_length)]
+            points_color        = colors[get_random_value(0, color_length)]
+            abcde_color         = colors[get_random_value(0, color_length)]
+            points_lines_color  = colors[get_random_value(0, color_length)]
+            abcde_lines_color   = colors[get_random_value(0, color_length)]
+
+        #----------------------------------------------------------------
+        # Pause button
         if is_key_pressed(KEY_P):
             is_ball_pause = not is_ball_pause
 
+        #----------------------------------------------------------------
+        # Update the "t"
         delta_time = 0.3 * get_frame_time()      
         if not is_ball_pause and not is_ball_manual_mode:
             mt = t
@@ -182,6 +222,8 @@ def main():
         else:
             t = at
 
+        #----------------------------------------------------------------
+        # Update the ball position and color
         new_ball_pos = bezier(p0.pos, p1.pos, p2.pos, p3.pos, t)
         ball.pos = new_ball_pos
 
@@ -189,6 +231,10 @@ def main():
             ball.pos = p0.pos
             t = 0.0
 
+        ball.color = ball_color
+
+        #----------------------------------------------------------------
+        # Update the points position
         mouse_pos = get_mouse_position()
         world_mouse_pos = get_screen_to_world2d(mouse_pos, camera)
 
@@ -216,6 +262,8 @@ def main():
             p2.pos = Vector2(320, 100)
             p3.pos = Vector2(300, 200)
 
+
+        # Update abcd points position
         a = vector2_lerp(p0.pos, p1.pos, t)
         b = vector2_lerp(p1.pos, p2.pos, t)
         c = vector2_lerp(p2.pos, p3.pos, t)   
@@ -223,20 +271,42 @@ def main():
         e = vector2_lerp(b, c, t)
 
         begin_drawing()
+        #----------------------------------------------------------------
+
         clear_background(RAYWHITE)
 
+        # '########::'########:::::'###::::'##:::::'##:::::'#######::'########::::::::'##:'########::'######::'########::'######::
+        # ##.... ##: ##.... ##:::'## ##::: ##:'##: ##::::'##.... ##: ##.... ##::::::: ##: ##.....::'##... ##:... ##..::'##... ##:
+        # ##:::: ##: ##:::: ##::'##:. ##:: ##: ##: ##:::: ##:::: ##: ##:::: ##::::::: ##: ##::::::: ##:::..::::: ##:::: ##:::..::
+        # ##:::: ##: ########::'##:::. ##: ##: ##: ##:::: ##:::: ##: ########:::::::: ##: ######::: ##:::::::::: ##::::. ######::
+        # ##:::: ##: ##.. ##::: #########: ##: ##: ##:::: ##:::: ##: ##.... ##:'##::: ##: ##...:::: ##:::::::::: ##:::::..... ##:
+        # ##:::: ##: ##::. ##:: ##.... ##: ##: ##: ##:::: ##:::: ##: ##:::: ##: ##::: ##: ##::::::: ##::: ##:::: ##::::'##::: ##:
+        # ########:: ##:::. ##: ##:::: ##:. ###. ###:::::. #######:: ########::. ######:: ########:. ######::::: ##::::. ######::
+        # ........:::..:::::..::..:::::..:::...::...:::::::.......:::........::::......:::........:::......::::::..::::::......:::
+        
+        #----------------------------------------------------------------
         begin_mode2d(camera)
 
-        draw_points(points)
+        #----------------------------------------------------------------
+        # Draw the control points
+        draw_points(points, points_color, points_lines_color)
+        
+        #----------------------------------------------------------------
+        # Draw the bezier line
         draw_bezier(p0, p1, p2, p3)
+
+        #----------------------------------------------------------------
+        # Draw the ball
         ball.draw()
 
+        #----------------------------------------------------------------
+        # Draw the abcde points
         if is_draw_abcde:
-            draw_circle(a.x, a.y, 7, PINK)
-            draw_circle(b.x, b.y, 7, PINK)
-            draw_circle(c.x, c.y, 7, PINK)
-            draw_circle(d.x, d.y, 7, PINK)
-            draw_circle(e.x, e.y, 7, PINK)
+            draw_circle(a.x, a.y, 7, abcde_color)
+            draw_circle(b.x, b.y, 7, abcde_color)
+            draw_circle(c.x, c.y, 7, abcde_color)
+            draw_circle(d.x, d.y, 7, abcde_color)
+            draw_circle(e.x, e.y, 7, abcde_color)
 
             draw_text("A", a.x, a.y, 14, BLACK)
             draw_text("B", b.x, b.y, 14, BLACK)
@@ -245,30 +315,52 @@ def main():
             draw_text("E", e.x, e.y, 14, BLACK)
             
             if is_draw_abcde_line: 
-                draw_line_v(a, b, PURPLE)
-                draw_line_v(b, c, PURPLE)
-                draw_line_v(d, e, PURPLE)
+                draw_line_v(a, b, abcde_lines_color)
+                draw_line_v(b, c, abcde_lines_color)
+                draw_line_v(d, e, abcde_lines_color)
 
+        #----------------------------------------------------------------
         end_mode2d()
 
-        is_reset_ball = draw_button("Reset Ball", Rectangle(get_screen_width() - 120, 120, 100, 32))
-        is_reset_points = draw_button("Reset Points", Rectangle(get_screen_width() - 120, 80, 100, 32))
+        # '########::'########:::::'###::::'##:::::'##:::::'######:::'##::::'##:'####:
+        # ##.... ##: ##.... ##:::'## ##::: ##:'##: ##::::'##... ##:: ##:::: ##:. ##::
+        # ##:::: ##: ##:::: ##::'##:. ##:: ##: ##: ##:::: ##:::..::: ##:::: ##:: ##::
+        # ##:::: ##: ########::'##:::. ##: ##: ##: ##:::: ##::'####: ##:::: ##:: ##::
+        # ##:::: ##: ##.. ##::: #########: ##: ##: ##:::: ##::: ##:: ##:::: ##:: ##::
+        # ##:::: ##: ##::. ##:: ##.... ##: ##: ##: ##:::: ##::: ##:: ##:::: ##:: ##::
+        # ########:: ##:::. ##: ##:::: ##:. ###. ###:::::. ######:::. #######::'####:
+        # ........:::..:::::..::..:::::..:::...::...:::::::......:::::.......:::....::
 
+        #----------------------------------------------------------------
+        # Draw the buttons
+        is_generate_colors = draw_button("Generate Colors",     Rectangle(screen_width - 120, 80 + 40 * 0, 100, 32))
+        is_reset_points = draw_button("Reset Points",           Rectangle(screen_width - 120, 80 + 40 * 1, 100, 32))
+        is_reset_ball = draw_button("Reset Ball",               Rectangle(screen_width - 120, 80 + 40 * 2, 100, 32))
+
+        #----------------------------------------------------------------
+        # Draw the checkboxes
         is_ball_manual_mode = draw_checkbox("Manual Mode",      Rectangle(10, 90 + 40 * 0, 32, 32), is_ball_manual_mode)
         is_draw_abcde = draw_checkbox("Draw abcde",             Rectangle(10, 90 + 40 * 1, 32, 32), is_draw_abcde)
         is_draw_abcde_line = draw_checkbox("Draw abcde line",   Rectangle(10, 90 + 40 * 2, 32, 32), is_draw_abcde_line)
-        is_ball_pause = draw_checkbox("Draw ball pause",        Rectangle(10, 90 + 40 * 3, 32, 32), is_ball_pause)
+        is_ball_pause = draw_checkbox("Puase",                  Rectangle(10, 90 + 40 * 3, 32, 32), is_ball_pause)
 
+        #----------------------------------------------------------------
+        # Draw the slider
+        draw_text("MT Slider: ", slider_mt_pos.x, slider_mt_pos.y - 16, 18, BLACK)
         mt = slider_mt.draw(mt)
 
+        #----------------------------------------------------------------
+        # Draw additional text
         if is_ball_pause:
-            draw_text("Paused", get_screen_width() / 2 - 100, 50, 44, RED)
-
+            draw_text("Paused", screen_width / 2 - 100, 50, 44, RED)
         draw_text("Bézier curve", 20, 10, 24, BLACK)
         draw_text("by Wildan R Wijanarko", 45, 38, 12, BLACK)
-        draw_fps(get_screen_width() - 80, 10)
+        draw_fps(screen_width - 80, 10)
+
+        #----------------------------------------------------------------
         end_drawing()
-        
+
+    # Close window and OpenGL context
     close_window()
 
 if __name__ == '__main__':
