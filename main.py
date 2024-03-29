@@ -119,6 +119,42 @@ class RLCamera(Camera2D):
         if get_mouse_wheel_move() < 0.0 and self.zoom > 0.0:
             self.zoom -= 0.1
 
+class Dropdown():
+    def __init__(self, title_text, text_arr, item_num, rec):
+        self.title_text     = title_text
+        self.text_arr       = text_arr
+        self.item_num       = item_num
+        self.rec            = rec
+        self.current_item   = 0
+        self._flag          = False
+        self._str_mode      = "Select Mode"
+
+    def draw(self):
+        mouse_pos = get_mouse_position()
+        
+        draw_text(self.title_text, self.rec.x, self.rec.y - 14, 12, BLACK)
+
+        if self._flag:
+            for i in range(0, self.item_num):
+                draw_button(self._str_mode, Rectangle(self.rec.x, self.rec.y, self.rec.width, self.rec.height))
+                draw_rectangle_lines_ex(Rectangle(self.rec.x, self.rec.y, self.rec.width, self.rec.height), 1, BLACK)
+                draw_button(self.text_arr[i], Rectangle(self.rec.x, self.rec.y + 35 * (i + 1), self.rec.width, self.rec.height))
+                draw_rectangle_lines_ex(Rectangle(self.rec.x, self.rec.y + 35 * (i + 1), self.rec.width, self.rec.height), 1, BLACK)
+
+                if check_collision_point_rec(mouse_pos, Rectangle(self.rec.x, self.rec.y + 35 * (i + 1), self.rec.width, self.rec.height)) and is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+                    self.current_item = i
+                    self._str_mode = self.text_arr[i]
+        else:
+            draw_button(self._str_mode, Rectangle(self.rec.x, self.rec.y, self.rec.width, self.rec.height))
+            draw_rectangle_lines_ex(Rectangle(self.rec.x, self.rec.y, self.rec.width, self.rec.height), 1, BLACK)
+
+        if check_collision_point_rec(mouse_pos, self.rec) and is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+            self._flag = not self._flag
+        elif is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and self._flag:
+            self._flag = not self._flag
+
+        return self.current_item
+
 def bezier(p0, p1, p2, p3, t):
     a = p0.lerp(p1, t)
     b = p1.lerp(p2, t)
@@ -219,7 +255,7 @@ def main():
     at = 0.0 # Automatic "t"
     mt = 0.0 # Manual "t"
 
-    slider_mt_pos = Vec2(50, screen_height / 2 - 10)
+    slider_mt_pos = Vec2(50, screen_height / 2)
     slider_mt = Slider(Rectangle(slider_mt_pos.x, slider_mt_pos.y, 150, 30))
 
     # Objects colors
@@ -232,8 +268,10 @@ def main():
     is_generate_colors = False
     colors_length = 11
     is_blinking_mode = False
+    current_blinking_mode = 0
     color_timer = 0.0
     color_update_time = 0.084
+    objects_colors_mode_dropdown = Dropdown("Random Colors Mode", ["Mode 1", "Mode 2"], 2, Rectangle(140, 30, 100, 35))
 
     # Grid
     is_draw_grid = False
@@ -254,14 +292,23 @@ def main():
         # Generate colors
         if is_generate_colors or is_blinking_mode:
             if is_blinking_mode:
-                color_timer += get_frame_time() * 0.5
-                if color_timer >= color_update_time:
-                    color_timer         = 0.0
-                    ball_color          = colors[get_random_value(0, colors_length)]
-                    points_color        = colors[get_random_value(0, colors_length)]
-                    abcde_color         = colors[get_random_value(0, colors_length)]
-                    points_lines_color  = colors[get_random_value(0, colors_length)]
-                    abcde_lines_color   = colors[get_random_value(0, colors_length)]
+                if current_blinking_mode == 0:
+                    color_timer += get_frame_time() * 0.5
+                    if color_timer >= color_update_time:
+                        color_timer         = 0.0
+                        ball_color          = colors[get_random_value(0, colors_length)]
+                        points_color        = colors[get_random_value(0, colors_length)]
+                        abcde_color         = colors[get_random_value(0, colors_length)]
+                        points_lines_color  = colors[get_random_value(0, colors_length)]
+                        abcde_lines_color   = colors[get_random_value(0, colors_length)]
+                elif current_blinking_mode == 1:
+                    if t == 1.0 or t == 0.0:
+                        color_timer         = 0.0
+                        ball_color          = colors[get_random_value(0, colors_length)]
+                        points_color        = colors[get_random_value(0, colors_length)]
+                        abcde_color         = colors[get_random_value(0, colors_length)]
+                        points_lines_color  = colors[get_random_value(0, colors_length)]
+                        abcde_lines_color   = colors[get_random_value(0, colors_length)]
             else:
                 ball_color          = colors[get_random_value(0, colors_length)]
                 points_color        = colors[get_random_value(0, colors_length)]
@@ -429,11 +476,16 @@ def main():
         mt = slider_mt.draw(mt)
 
         #----------------------------------------------------------------
+        # Draw the dropdown
+        if is_blinking_mode:
+            current_blinking_mode = objects_colors_mode_dropdown.draw()
+
+        #----------------------------------------------------------------
         # Draw additional text
         if is_ball_pause:
             draw_text("Paused", screen_width / 2 - 100, 50, 44, RED)
-        draw_text("Bézier curve", 20, 10, 24, BLACK)
-        draw_text("by Wildan R Wijanarko", 45, 38, 12, BLACK)
+        draw_text("Bézier curve", screen_width - 220, screen_height - 80, 24, BLACK)
+        draw_text("by Wildan R Wijanarko",  screen_width - 200, screen_height - 50, 12, BLACK)
         draw_fps(screen_width - 80, 10)
 
         #----------------------------------------------------------------
