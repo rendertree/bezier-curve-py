@@ -34,6 +34,41 @@ class Point:
         draw_text(self.name, self.pos.x - 5, self.pos.y - 5, 15, BLACK)
         draw_text(pos, self.pos.x + 25, self.pos.y + 10, 12, BLACK)
 
+class Vec2:
+    def __init__(self, x=0, y=0):
+        self.x = x
+        self.y = y
+    
+    def __add__(self, other):
+        if isinstance(other, Vec2):
+            return Vec2(self.x + other.x, self.y + other.y)
+        else:
+            raise TypeError("Unsupported operand type for +: Vec2 and " + str(type(other)))
+
+    def __sub__(self, other):
+        if isinstance(other, Vec2):
+            return Vec2(self.x - other.x, self.y - other.y)
+        else:
+            raise TypeError("Unsupported operand type for -: Vec2 and " + str(type(other)))
+
+    def __mul__(self, other):
+        if isinstance(other, (int, float)):
+            return Vec2(self.x * other, self.y * other)
+        else:
+            raise TypeError("Unsupported operand type for *: Vec2 and " + str(type(other)))
+
+    def rl_vec(self):
+        return Vector2(self.x, self.y)
+
+    def lerp(self, other, t):
+        if isinstance(other, Vec2) and isinstance(t, (int, float)):
+            return Vec2(
+                self.x + (other.x - self.x) * t,
+                self.y + (other.y - self.y) * t
+            )
+        else:
+            raise TypeError("Unsupported operand types for lerp: Vec2, " + str(type(other)) + ", " + str(type(t)))
+        
 class Slider():
     def __init__(self, rec):
         self._is_dragging = False     
@@ -63,8 +98,8 @@ class Slider():
 
 class RLCamera(Camera2D):
     def __init__(self):
-        self.target   = Vector2(0, 0)
-        self.offset   = Vector2(200.0, 200.0)
+        self.target   = Vec2(0, 0).rl_vec()
+        self.offset   = Vec2(200.0, 200.0).rl_vec()
         self.rotation = 0.0
         self.zoom     = 1.0
 
@@ -85,13 +120,15 @@ class RLCamera(Camera2D):
             self.zoom -= 0.1
 
 def bezier(p0, p1, p2, p3, t):
-    a = vector2_lerp(p0, p1, t)
-    b = vector2_lerp(p1, p2, t)
-    c = vector2_lerp(p2, p3, t)   
-    d = vector2_lerp(a, b, t)
-    e = vector2_lerp(b, c, t)
+    a = p0.lerp(p1, t)
+    b = p1.lerp(p2, t)
+    c = p2.lerp(p3, t)
+    d = a.lerp(b, t)
+    e = b.lerp(c, t)
 
-    return vector2_lerp(d, e, t)
+    result = d.lerp(e, t)
+
+    return result
 
 def draw_bezier(p0, p1, p2, p3):
     t = 0.0
@@ -99,7 +136,7 @@ def draw_bezier(p0, p1, p2, p3):
         point1 = bezier(p0.pos, p1.pos, p2.pos, p3.pos, t)
         t += 0.01
         point2 = bezier(p0.pos, p1.pos, p2.pos, p3.pos, t)
-        draw_line_v(point1, point2, BLACK)
+        draw_line_v(point1.rl_vec(), point2.rl_vec(), BLACK)
         t += 0.01
 
 def draw_points(points, points_color, lines_color):
@@ -140,18 +177,21 @@ def draw_checkbox(text, rec, flag):
     return flag
 
 def main():
-    screen_width = 1080
-    screen_height = 720
+    screen_width    = 1080
+    screen_height   = 720
+    world_width     = 2200
+    world_height    = 2200
+    grid_size       = 80
 
     init_window(screen_width, screen_height, "Bézier curve")
     set_target_fps(120)
     
     camera = RLCamera()
 
-    p0 = Point(Vector2(100, 200), int(20), LIME, str("P0"))
-    p1 = Point(Vector2(80,  100), int(20), LIME, str("P1"))
-    p2 = Point(Vector2(320, 100), int(20), LIME, str("P2"))
-    p3 = Point(Vector2(300, 200), int(20), LIME, str("P3"))
+    p0 = Point(Vec2(100, 200), int(20), LIME, str("P0"))
+    p1 = Point(Vec2(80,  100), int(20), LIME, str("P1"))
+    p2 = Point(Vec2(320, 100), int(20), LIME, str("P2"))
+    p3 = Point(Vec2(300, 200), int(20), LIME, str("P3"))
 
     points = [p0, p0, p1, p2, p3]
     point_radius = float(0.0)
@@ -163,7 +203,7 @@ def main():
     for i in range(0, 5):
         points[i].id = i
     
-    ball = Point(Vector2(100.0 * 1.5, 200.0 * 2.0), int(12), BLUE, str("Ball"))
+    ball = Point(Vec2(100.0 * 1.5, 200.0 * 2.0), int(12), BLUE, str("Ball"))
     is_ball_pause = False
     is_ball_manual_mode = False
     is_ball_forward = True
@@ -179,7 +219,7 @@ def main():
     at = 0.0 # Automatic "t"
     mt = 0.0 # Manual "t"
 
-    slider_mt_pos = Vector2(50, screen_height / 2 - 10)
+    slider_mt_pos = Vec2(50, screen_height / 2 - 10)
     slider_mt = Slider(Rectangle(slider_mt_pos.x, slider_mt_pos.y, 150, 30))
 
     # Objects colors
@@ -192,6 +232,11 @@ def main():
     is_generate_colors = False
     colors_length = 11
     is_blinking_mode = False
+    color_timer = 0.0
+    color_update_time = 0.084
+
+    # Grid
+    is_draw_grid = False
 
     while not window_should_close():
     #----------------------------------------------------------------
@@ -208,11 +253,21 @@ def main():
         #----------------------------------------------------------------
         # Generate colors
         if is_generate_colors or is_blinking_mode:
-            ball_color          = colors[get_random_value(0, colors_length)]
-            points_color        = colors[get_random_value(0, colors_length)]
-            abcde_color         = colors[get_random_value(0, colors_length)]
-            points_lines_color  = colors[get_random_value(0, colors_length)]
-            abcde_lines_color   = colors[get_random_value(0, colors_length)]
+            if is_blinking_mode:
+                color_timer += get_frame_time() * 0.5
+                if color_timer >= color_update_time:
+                    color_timer         = 0.0
+                    ball_color          = colors[get_random_value(0, colors_length)]
+                    points_color        = colors[get_random_value(0, colors_length)]
+                    abcde_color         = colors[get_random_value(0, colors_length)]
+                    points_lines_color  = colors[get_random_value(0, colors_length)]
+                    abcde_lines_color   = colors[get_random_value(0, colors_length)]
+            else:
+                ball_color          = colors[get_random_value(0, colors_length)]
+                points_color        = colors[get_random_value(0, colors_length)]
+                abcde_color         = colors[get_random_value(0, colors_length)]
+                points_lines_color  = colors[get_random_value(0, colors_length)]
+                abcde_lines_color   = colors[get_random_value(0, colors_length)]
 
         #----------------------------------------------------------------
         # Pause button
@@ -264,7 +319,7 @@ def main():
             else:
                 point_radius = point.size
 
-            if check_collision_point_circle(world_mouse_pos, point.pos, point_radius) and is_mouse_button_down(MOUSE_LEFT_BUTTON) and not is_dragging:
+            if check_collision_point_circle(world_mouse_pos, point.pos.rl_vec(), point_radius) and is_mouse_button_down(MOUSE_LEFT_BUTTON) and not is_dragging:
                 lock_id = point.id
                 if lock_id == point.id:
                     is_dragging = True
@@ -274,21 +329,21 @@ def main():
                 lock_id = -1
 
             if is_dragging and point.id == lock_id:
-                point.pos = world_mouse_pos
+                point.pos.x = world_mouse_pos.x
+                point.pos.y = world_mouse_pos.y
 
         if is_reset_points:
-            p0.pos = Vector2(100, 200)
-            p1.pos = Vector2(80,  100)
-            p2.pos = Vector2(320, 100)
-            p3.pos = Vector2(300, 200)
-
+            p0.pos = Vec2(100, 200)
+            p1.pos = Vec2(80,  100)
+            p2.pos = Vec2(320, 100)
+            p3.pos = Vec2(300, 200)
 
         # Update abcd points position
-        a = vector2_lerp(p0.pos, p1.pos, t)
-        b = vector2_lerp(p1.pos, p2.pos, t)
-        c = vector2_lerp(p2.pos, p3.pos, t)   
-        d = vector2_lerp(a, b, t)
-        e = vector2_lerp(b, c, t)
+        a = p0.pos.lerp(p1.pos, t)
+        b = p1.pos.lerp(p2.pos, t)
+        c = p2.pos.lerp(p3.pos, t)
+        d = a.lerp(b, t)
+        e = b.lerp(c, t)
 
         # camera.update(ball.pos)
 
@@ -337,9 +392,9 @@ def main():
             draw_text("E", e.x, e.y, 14, BLACK)
             
             if is_draw_abcde_line: 
-                draw_line_v(a, b, abcde_lines_color)
-                draw_line_v(b, c, abcde_lines_color)
-                draw_line_v(d, e, abcde_lines_color)
+                draw_line_v(a.rl_vec(), b.rl_vec(), abcde_lines_color)
+                draw_line_v(b.rl_vec(), c.rl_vec(), abcde_lines_color)
+                draw_line_v(d.rl_vec(), e.rl_vec(), abcde_lines_color)
 
         #----------------------------------------------------------------
         camera.end_mode()
@@ -366,6 +421,7 @@ def main():
         is_draw_abcde_line = draw_checkbox("Draw abcde line",   Rectangle(10, 90 + 40 * 2, 32, 32), is_draw_abcde_line)
         is_ball_pause = draw_checkbox("Pause",                  Rectangle(10, 90 + 40 * 3, 32, 32), is_ball_pause)
         is_blinking_mode = draw_checkbox("Blinking Mode",       Rectangle(10, 90 + 40 * 4, 32, 32), is_blinking_mode)
+        is_draw_grid = draw_checkbox("Draw Grid",               Rectangle(10, 90 + 40 * 5, 32, 32), is_draw_grid)
 
         #----------------------------------------------------------------
         # Draw the slider
@@ -379,6 +435,15 @@ def main():
         draw_text("Bézier curve", 20, 10, 24, BLACK)
         draw_text("by Wildan R Wijanarko", 45, 38, 12, BLACK)
         draw_fps(screen_width - 80, 10)
+
+        #----------------------------------------------------------------
+        # Draw grid
+        if is_draw_grid:
+            for x in range(-world_width // 2, (world_width // 2) + 1, grid_size):
+                draw_line(x, -world_height // 2, x, world_height // 2, DARKGRAY)
+
+            for y in range(-world_height // 2, (world_height // 2) + 1, grid_size):
+                draw_line(-world_width // 2, y, world_width // 2, y, DARKGRAY)
 
         #----------------------------------------------------------------
         end_drawing()
