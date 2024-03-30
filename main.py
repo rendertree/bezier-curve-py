@@ -157,18 +157,29 @@ class Dropdown():
 
 class MenuBar():
     def __init__(self):
-        self._flag_file         = False
-        self._flag_settings     = False
-        self._flag_view         = False
-        self._file_rec          = Rectangle(0, 0, 50, 30)
-        self._settings_rec      = Rectangle(50, 0, 50, 30)
-        self._view_rec          = Rectangle(100, 0, 50, 30)
-        self._file_item_num     = 2
-        self._settings_item_num = 2
-        self._view_item_num     = 2
-        self._file_str_item     = ["aa1", "bb1"]
-        self._settings_str_item = ["aa2", "bb2"]
-        self._view_str_item     = ["Windowed", "Fullscreen"]
+        self._flag_file             = False
+        self._flag_settings         = False
+        self._flag_view             = False
+        self._file_rec              = Rectangle(0, 0, 50, 30)
+        self._settings_rec          = Rectangle(50, 0, 50, 30)
+        self._view_rec              = Rectangle(100, 0, 50, 30)
+        self._file_item_num         = 2
+        self._settings_item_num     = 2
+        self._view_item_num         = 2
+        self._file_str_item         = ["aa1", "bb1"]
+        self._settings_str_item     = ["aa2", "bb2"]
+        self._view_str_item         = ["Windowed", "Fullscreen"]
+        self._file_btn_on_press     = False
+        self._settings_btn_on_press = False
+        self._view_btn_on_press     = False
+        self._is_fullscreen         = False
+        
+        # Only for some buttons
+        self._view_btn_state = [False, True]
+
+    def update(self):
+        if self._is_fullscreen and not is_window_fullscreen:
+            toggle_fullscreen()
 
     def draw(self):
         mouse_pos = get_mouse_position()
@@ -209,8 +220,18 @@ class MenuBar():
         draw_button("View", self._view_rec)
         if self._flag_view:
             for i in range(0, self._view_item_num):
-                draw_button(self._view_str_item[i], Rectangle(self._view_rec.x, self._view_rec.y + 30 * (i + 1), self._view_rec.width + 50, self._view_rec.height))
-        
+                self._view_btn_on_press = draw_button(self._view_str_item[i], Rectangle(self._view_rec.x, self._view_rec.y + 30 * (i + 1), self._view_rec.width + 50, self._view_rec.height), self._view_btn_state[i])
+                
+                if self._view_btn_on_press and i == 0:
+                    self._view_btn_state[0] = False
+                    self._view_btn_state[1] = True
+                    toggle_fullscreen()
+
+                if self._view_btn_on_press and i == 1:
+                    self._view_btn_state[0] = True
+                    self._view_btn_state[1] = False
+                    toggle_fullscreen()
+
         if check_collision_point_rec(mouse_pos, self._view_rec) and is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
             self._flag_view = not self._flag_view
         elif is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and self._flag_view:
@@ -243,7 +264,7 @@ def draw_points(points, points_color, lines_color):
         next_index = (i + 1) % 5 # Wrap around to the first point for the last connection
         draw_line(points[i].pos.x, points[i].pos.y, points[next_index].pos.x, points[next_index].pos.y, lines_color)
 
-def draw_button(text, button_rec):
+def draw_button(text, button_rec, is_clickable=True):
     mouse_pos = get_mouse_position()
     is_mouse_over = check_collision_point_rec(mouse_pos, button_rec)
 
@@ -251,12 +272,17 @@ def draw_button(text, button_rec):
     text_y = button_rec.y + (button_rec.height - 11) / 2
 
     rec_color = DARKBROWN if is_mouse_over else LIGHTGRAY
-    text_color = BLACK if is_mouse_over else DARKGRAY
+    
+    text_color = BLACK
+    if is_clickable:
+        text_color = BLACK if is_mouse_over else DARKGRAY
+    else:
+        text_color = GRAY
 
     draw_rectangle_rec(button_rec, rec_color)
     draw_text(text, text_x, text_y, 11, text_color)
 
-    return is_mouse_over and is_mouse_button_pressed(MOUSE_LEFT_BUTTON)
+    return is_clickable and is_mouse_over and is_mouse_button_pressed(MOUSE_LEFT_BUTTON)
 
 def draw_checkbox(text, rec, flag):
     mouse_pos = get_mouse_position()
