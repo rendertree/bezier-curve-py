@@ -177,10 +177,6 @@ class MenuBar():
         # Only for some buttons
         self._view_btn_state = [False, True]
 
-    def update(self):
-        if self._is_fullscreen and not is_window_fullscreen:
-            toggle_fullscreen()
-
     def draw(self):
         mouse_pos = get_mouse_position()
 
