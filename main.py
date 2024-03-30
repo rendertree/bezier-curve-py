@@ -574,6 +574,9 @@ class app():
         draw_text("Bézier curve", self.screen_width - 220, self.screen_height - 80, 24, BLACK)
         draw_text("by Wildan R Wijanarko",  self.screen_width - 200, self.screen_height - 50, 12, BLACK)
         draw_fps(self.screen_width - 80, 10)
+
+        #----------------------------------------------------------------
+        # Draw grid
         self._draw_grid()
 
         end_drawing()
