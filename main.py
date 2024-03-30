@@ -560,9 +560,15 @@ class app():
         begin_drawing()
         clear_background(RAYWHITE)
         self.camera.begin_mode()
+
+        #----------------------------------------------------------------
+        # Draw the bezier object
         self.bezier_object.draw_object()
+        
         self.camera.end_mode()
 
+        #----------------------------------------------------------------
+        # Draw the bezier GUI
         self.bezier_object.draw_gui()
         
         #----------------------------------------------------------------
