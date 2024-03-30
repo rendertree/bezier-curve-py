@@ -155,6 +155,67 @@ class Dropdown():
 
         return self.current_item
 
+class MenuBar():
+    def __init__(self):
+        self._flag_file         = False
+        self._flag_settings     = False
+        self._flag_view         = False
+        self._file_rec          = Rectangle(0, 0, 50, 30)
+        self._settings_rec      = Rectangle(50, 0, 50, 30)
+        self._view_rec          = Rectangle(100, 0, 50, 30)
+        self._file_item_num     = 2
+        self._settings_item_num = 2
+        self._view_item_num     = 2
+        self._file_str_item     = ["aa1", "bb1"]
+        self._settings_str_item = ["aa2", "bb2"]
+        self._view_str_item     = ["Windowed", "Fullscreen"]
+
+    def draw(self):
+        mouse_pos = get_mouse_position()
+
+        #----------------------------------------------------------------
+        # Draw the background
+        bg_pos = Vec2(0, 0)
+        bg_size = Vec2(get_screen_width(), 30)
+        draw_rectangle_v(bg_pos.rl_vec(), bg_size.rl_vec(), LIGHTGRAY)
+
+        #----------------------------------------------------------------
+        # Draw the buttons
+        
+        # File
+        draw_button("File", self._file_rec)
+        if self._flag_file:
+            for i in range(0, self._file_item_num):
+                draw_button(self._file_str_item[i], Rectangle(self._file_rec.x, self._file_rec.y + 30 * (i + 1), self._file_rec.width + 50, self._file_rec.height))
+
+        
+        if check_collision_point_rec(mouse_pos, self._file_rec) and is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+            self._flag_file = not self._flag_file
+        elif is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and self._flag_file:
+            self._flag_file = not self._flag_file
+
+        # Settings
+        draw_button("Settings", self._settings_rec)
+        if self._flag_settings:
+            for i in range(0, self._settings_item_num):
+                draw_button(self._settings_str_item[i], Rectangle(self._settings_rec.x, self._settings_rec.y + 30 * (i + 1), self._settings_rec.width + 50, self._settings_rec.height))
+
+        if check_collision_point_rec(mouse_pos, self._settings_rec) and is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+            self._flag_settings = not self._flag_settings
+        elif is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and self._flag_settings:
+            self._flag_settings = not self._flag_settings
+
+        # View
+        draw_button("View", self._view_rec)
+        if self._flag_view:
+            for i in range(0, self._view_item_num):
+                draw_button(self._view_str_item[i], Rectangle(self._view_rec.x, self._view_rec.y + 30 * (i + 1), self._view_rec.width + 50, self._view_rec.height))
+        
+        if check_collision_point_rec(mouse_pos, self._view_rec) and is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+            self._flag_view = not self._flag_view
+        elif is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and self._flag_view:
+            self._flag_view = not self._flag_view
+
 def bezier(p0, p1, p2, p3, t):
     a = p0.lerp(p1, t)
     b = p1.lerp(p2, t)
@@ -276,6 +337,9 @@ def main():
     # Grid
     is_draw_grid = False
 
+    # Menu bar
+    menu_bar = MenuBar()
+
     while not window_should_close():
     #----------------------------------------------------------------
     
@@ -303,7 +367,6 @@ def main():
                         abcde_lines_color   = colors[get_random_value(0, colors_length)]
                 elif current_blinking_mode == 1:
                     if t == 1.0 or t == 0.0:
-                        color_timer         = 0.0
                         ball_color          = colors[get_random_value(0, colors_length)]
                         points_color        = colors[get_random_value(0, colors_length)]
                         abcde_color         = colors[get_random_value(0, colors_length)]
@@ -479,6 +542,10 @@ def main():
         # Draw the dropdown
         if is_blinking_mode:
             current_blinking_mode = objects_colors_mode_dropdown.draw()
+        
+        #----------------------------------------------------------------
+        # Draw the menu bar
+        menu_bar.draw()
 
         #----------------------------------------------------------------
         # Draw additional text
