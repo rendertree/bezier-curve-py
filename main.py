@@ -482,7 +482,6 @@ class BezierObject(object):
         self._is_draw_abcde_line = draw_checkbox("Draw abcde line",   Rectangle(10, 90 + 40 * 2, 32, 32), self._is_draw_abcde_line)
         self._is_ball_pause = draw_checkbox("Pause",                  Rectangle(10, 90 + 40 * 3, 32, 32), self._is_ball_pause)
         self._is_blinking_mode = draw_checkbox("Blinking Mode",       Rectangle(10, 90 + 40 * 4, 32, 32), self._is_blinking_mode)
-        self._is_draw_grid = draw_checkbox("Draw Grid",               Rectangle(10, 90 + 40 * 5, 32, 32), self._is_draw_grid)
 
         #----------------------------------------------------------------
         # Draw the slider
@@ -562,20 +561,12 @@ class app():
             for y in range(-self.world_height // 2, (self.world_height // 2) + 1, self.grid_size):
                 draw_line(-self.world_width // 2, y, self.world_width // 2, y, DARKGRAY)
 
-    def update(self):
-        self.bezier_object.update(self.camera)
-
-    def render(self):
-        begin_drawing()
-        clear_background(RAYWHITE)
-        self.camera.begin_mode()
-
+    def _draw_gui0(self):
         #----------------------------------------------------------------
-        # Draw the bezier object
-        self.bezier_object.draw_object()
-        
-        self.camera.end_mode()
-
+        # Draw grid
+        self._draw_grid()
+    
+    def _draw_gui1(self):
         #----------------------------------------------------------------
         # Draw the bezier GUI
         self.bezier_object.draw_gui()
@@ -585,14 +576,33 @@ class app():
         self.menu_bar.draw()
 
         #----------------------------------------------------------------
+        # Grid checkbox
+        self.is_draw_grid = draw_checkbox("Draw Grid", Rectangle(10, 90 + 40 * 5, 32, 32), self.is_draw_grid)
+
+        #----------------------------------------------------------------
         # Draw additional text
         draw_text("Bézier curve", self.screen_width - 220, self.screen_height - 80, 24, BLACK)
         draw_text("by Wildan R Wijanarko",  self.screen_width - 200, self.screen_height - 50, 12, BLACK)
         draw_fps(self.screen_width - 80, 10)
 
+    def update(self):
+        self.bezier_object.update(self.camera)
+
+    def render(self):
+        begin_drawing()
+        clear_background(RAYWHITE)
+
+        self._draw_gui0()
+
+        self.camera.begin_mode()
+
         #----------------------------------------------------------------
-        # Draw grid
-        self._draw_grid()
+        # Draw the bezier object
+        self.bezier_object.draw_object()
+        
+        self.camera.end_mode()
+    
+        self._draw_gui1()
 
         end_drawing()
 
