@@ -168,7 +168,7 @@ class MenuBar():
         self._file_item_num         = 2
         self._settings_item_num     = 2
         self._view_item_num         = 2
-        self._file_str_item         = ["aa1", "Exit"]
+        self._file_str_item         = ["Export to PNG", "Exit"]
         self._settings_str_item     = ["aa2", "bb2"]
         self._view_str_item         = ["Windowed", "Fullscreen"]
         self._file_btn_on_press     = False
@@ -197,6 +197,9 @@ class MenuBar():
         if self._flag_file:
             for i in range(0, self._file_item_num):
                 self._file_btn_on_press = draw_button(self._file_str_item[i], Rectangle(self._file_rec.x, self._file_rec.y + 30 * (i + 1), self._file_rec.width + 50, self._file_rec.height))
+
+                if self._file_btn_on_press and i == 0:
+                    take_screenshot("screenshot.png")
 
                 if self._file_btn_on_press and i == 1:
                     g_should_close = True
