@@ -277,14 +277,16 @@ class BezierObject(object):
         self._slider_mt = Slider(Rectangle(self._slider_mt_pos.x, self._slider_mt_pos.y, 150, 30))
 
         # Objects colors
-        self._colors = [RED, GREEN, BLUE, YELLOW, BROWN, LIME, PINK, PURPLE, GOLD, DARKBLUE, DARKPURPLE, DARKGRAY]
+        self._colors = [BLACK, RED, GREEN, BLUE, YELLOW, BROWN, LIME, PINK, PURPLE, GOLD, DARKBLUE, DARKPURPLE, DARKGRAY]
         self._ball_color = BLUE
         self._points_color = LIME
         self._abcde_color = PINK
-        self._points_lines_color = GOLD
+        self._points_lines_color_0 = GOLD
+        self._points_lines_color_1 = RED
         self._abcde_lines_color = PURPLE
+        self._abcde_lines_color = BLACK
         self._is_generate_colors = False
-        self._colors_length = 11
+        self._colors_length = 12
         self._is_blinking_mode = False
         self._current_blinking_mode = 0
         self._color_timer = 0.0
@@ -297,7 +299,7 @@ class BezierObject(object):
         # Menu bar
         self._menu_bar = MenuBar()
 
-    def _bezier(self, p0, p1, p2, p3, t):
+    def _bezier(self, p0, p1, p2, p3, t) -> Vec2:
         a = p0.lerp(p1, t)
         b = p1.lerp(p2, t)
         c = p2.lerp(p3, t)
@@ -311,20 +313,47 @@ class BezierObject(object):
     def _draw_bezier(self, p0, p1, p2, p3):
         t = 0.0
         while t <= 1.0:
-            point1 = self._bezier(p0.pos, p1.pos, p2.pos, p3.pos, t)
+            start_pos = self._bezier(p0.pos, p1.pos, p2.pos, p3.pos, t)
             t += 0.01
-            point2 = self._bezier(p0.pos, p1.pos, p2.pos, p3.pos, t)
-            draw_line_v(point1.rl_vec(), point2.rl_vec(), BLACK)
+            end_pos = self._bezier(p0.pos, p1.pos, p2.pos, p3.pos, t)
+            draw_line_v(start_pos.rl_vec(), end_pos.rl_vec(), BLACK)
             t += 0.01
 
-    def _draw_points(self, points, points_color, lines_color):
+    def _draw_points(self, points, points_color, lines_color_0, lines_color_1, t):
         for i in range(0, 5):
             points[i].color = points_color
             points[i].draw()
             next_index = (i + 1) % 5 # Wrap around to the first point for the last connection
-            draw_line(points[i].pos.x, points[i].pos.y, points[next_index].pos.x, points[next_index].pos.y, lines_color)
+
+            start_x = points[i].pos.x
+            start_y = points[i].pos.y
+            
+            end_x = points[next_index].pos.x
+            end_y = points[next_index].pos.y
+
+            dx = start_x + (end_x - start_x) * t
+            dy = start_y + (end_y - start_y) * t
+
+            start_pos = Vec2(start_x, start_y)
+            end_pos   = Vec2(end_x, end_y)
+
+            if lines_color_0 == lines_color_1:
+                self._points_lines_color_0 = self._colors[get_random_value(0, self._colors_length)]
+                self._points_lines_color_1 = self._colors[get_random_value(0, self._colors_length)]
+            
+            draw_line_ex(start_pos.rl_vec(), end_pos.rl_vec(), 7.0, lines_color_0)
+            draw_line_ex(start_pos.rl_vec(), Vec2(dx, dy).rl_vec(), 0.9, lines_color_1)
 
     def update(self, camera):
+        def _get_random_color(self) -> Color:
+            return self._colors[get_random_value(0, self._colors_length)]
+        def _generate_colors(self):
+            self._ball_color           = _get_random_color(self)
+            self._points_color         = _get_random_color(self)
+            self._abcde_color          = _get_random_color(self)
+            self._points_lines_color_0 = _get_random_color(self)
+            self._points_lines_color_1 = _get_random_color(self)
+            self._abcde_lines_color    = _get_random_color(self)
         #----------------------------------------------------------------
         # Generate colors
         if self._is_generate_colors or self._is_blinking_mode:
@@ -332,25 +361,11 @@ class BezierObject(object):
                 if self._current_blinking_mode == 0:
                     self._color_timer += get_frame_time() * 0.5
                     if self._color_timer >= self._color_update_time:
-                        self._color_timer         = 0.0
-                        self._ball_color          = self._colors[get_random_value(0, self._colors_length)]
-                        self._points_color        = self._colors[get_random_value(0, self._colors_length)]
-                        self._abcde_color         = self._colors[get_random_value(0, self._colors_length)]
-                        self._points_lines_color  = self._colors[get_random_value(0, self._colors_length)]
-                        self._abcde_lines_color   = self._colors[get_random_value(0, self._colors_length)]
+                        self._color_timer = 0.0
+                        _generate_colors(self)
                 elif self._current_blinking_mode == 1:
-                    if self._t == 1.0 or self._t == 0.0:
-                        self._ball_color          = self._colors[get_random_value(0, self._colors_length)]
-                        self._points_color        = self._colors[get_random_value(0, self._colors_length)]
-                        self._abcde_color         = self._colors[get_random_value(0, self._colors_length)]
-                        self._points_lines_color  = self._colors[get_random_value(0, self._colors_length)]
-                        self._abcde_lines_color   = self._colors[get_random_value(0, self._colors_length)]
-            else:
-                self._ball_color          = self._colors[get_random_value(0, self._colors_length)]
-                self._points_color        = self._colors[get_random_value(0, self._colors_length)]
-                self._abcde_color         = self._colors[get_random_value(0, self._colors_length)]
-                self._points_lines_color  = self._colors[get_random_value(0, self._colors_length)]
-                self._abcde_lines_color   = self._colors[get_random_value(0, self._colors_length)]
+                    if self._t == 1.0 or self._t == 0.0: _generate_colors(self)
+            else: _generate_colors(self)
 
         #----------------------------------------------------------------
         # Pause button
@@ -421,17 +436,15 @@ class BezierObject(object):
             self._p2.pos = Vec2(320, 100)
             self._p3.pos = Vec2(300, 200)
 
-        # Update abcd points position
-        a = self._p0.pos.lerp(self._p1.pos, self._t)
-        b = self._p1.pos.lerp(self._p2.pos, self._t)
-        c = self._p2.pos.lerp(self._p3.pos, self._t)
-        d = a.lerp(b, self._t)
-        e = b.lerp(c, self._t)
-
     def draw_object(self):
         #----------------------------------------------------------------
         # Draw the control points
-        self._draw_points(self._points, self._points_color, self._points_lines_color)
+        self._draw_points(
+            self._points, 
+            self._points_color, 
+            self._points_lines_color_0, 
+            self._points_lines_color_1, 
+            self._t)
         
         #----------------------------------------------------------------
         # Draw the bezier line
@@ -539,6 +552,7 @@ class app():
         self.world_height    = 2200
         self.grid_size       = 80
 
+        set_config_flags(FLAG_MSAA_4X_HINT)
         init_window(self.screen_width, self.screen_height, "Bézier curve")
         set_target_fps(120)
 
