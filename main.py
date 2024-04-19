@@ -345,8 +345,7 @@ class BezierObject(object):
             draw_line_ex(start_pos.rl_vec(), Vec2(dx, dy).rl_vec(), 0.9, lines_color_1)
 
     def update(self, camera):
-        def _get_random_color(self) -> Color:
-            return self._colors[get_random_value(0, self._colors_length)]
+        def _get_random_color(self) -> Color: return self._colors[get_random_value(0, self._colors_length)]
         def _generate_colors(self):
             self._ball_color           = _get_random_color(self)
             self._points_color         = _get_random_color(self)
