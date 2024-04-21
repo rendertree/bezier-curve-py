@@ -116,9 +116,9 @@ class RLCamera(Camera2D):
     def update(self, target):
         self.target = target
 
-        if get_mouse_wheel_move() > 0.0 and self.zoom < 3.0:
+        if get_mouse_wheel_move() > 0.0 and self.zoom < 1.5:
             self.zoom += 0.1
-        if get_mouse_wheel_move() < 0.0 and self.zoom > 0.0:
+        if get_mouse_wheel_move() < 0.0 and self.zoom > 0.5:
             self.zoom -= 0.1
 
 class Dropdown():
@@ -565,6 +565,8 @@ class app():
 
         # Bezier object
         self.bezier_object = BezierObject()
+
+        self.center_point = Vec2(0, 0)
     
     def _draw_grid(self):
         if self.is_draw_grid:
@@ -600,6 +602,7 @@ class app():
 
     def update(self):
         self.bezier_object.update(self.camera)
+        self.camera.update(self.center_point.rl_vec())
 
     def render(self):
         begin_drawing()
