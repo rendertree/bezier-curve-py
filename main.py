@@ -344,6 +344,14 @@ class BezierObject(object):
             draw_line_ex(start_pos.rl_vec(), end_pos.rl_vec(), 7.0, lines_color_0)
             draw_line_ex(start_pos.rl_vec(), Vec2(dx, dy).rl_vec(), 0.9, lines_color_1)
 
+        start_pos = points[0].pos
+        steps = 100
+        for i in range(1, int(t * steps) + 1):
+            step_t = i / steps
+            start_pos = self._bezier(points[1].pos, points[2].pos, points[3].pos, points[4].pos, step_t)
+            draw_line_ex(start_pos.rl_vec(), end_pos.rl_vec(), 7.0, PURPLE)
+            end_pos = start_pos
+
     def update(self, camera):
         def _get_random_color(self) -> Color: return self._colors[get_random_value(0, self._colors_length)]
         def _generate_colors(self):
