@@ -631,6 +631,9 @@ def draw_checkbox(text, rec, flag):
     mouse_pos = get_mouse_position()
     is_mouse_over = check_collision_point_rec(mouse_pos, rec)
 
+    if is_mouse_over:
+        draw_rectangle_rec(rec, LIGHTGRAY)
+
     if flag:
         draw_rectangle_rec(rec, DARKBLUE)
 
