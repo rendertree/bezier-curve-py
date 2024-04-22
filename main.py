@@ -695,15 +695,19 @@ class app():
         # Menu bar
         self.menu_bar = MenuBar()
 
-        # Bezier object
-        self.bezier_object = BezierObject()
-
+        # Camera target (2D mode)
         self.center_point = Vec2(0, 0)
 
+        # Simple line
         self.simple_line = SimpleLine(0, 0, 100, 0)
+
+        # Bezier object
+        self.bezier_object = BezierObject()
         
+        # 2D object
         self.object_2d = Object2D()
 
+        # 3D object
         self.object_3d = Object3D()
     
     def _draw_grid(self):
@@ -721,16 +725,19 @@ class app():
     
     def _draw_gui1(self):
         #----------------------------------------------------------------
+        # Grid checkbox
+        grid_checkbox_pos_y = int(90 + 40 * 5) if self.menu_bar.get_current_mode() == 1 else int(90 + 40 * 0)
+        if not self.menu_bar.get_current_mode() == 3:
+            self.is_draw_grid = draw_checkbox("Draw Grid", Rectangle(10, grid_checkbox_pos_y, 32, 32), self.is_draw_grid)
+        
+        #----------------------------------------------------------------
         # Draw the bezier GUI
-        self.bezier_object.draw_gui()
+        if self.menu_bar.get_current_mode() == 1:
+            self.bezier_object.draw_gui()
         
         #----------------------------------------------------------------
         # Draw the menu bar
         self.menu_bar.draw()
-
-        #----------------------------------------------------------------
-        # Grid checkbox
-        self.is_draw_grid = draw_checkbox("Draw Grid", Rectangle(10, 90 + 40 * 5, 32, 32), self.is_draw_grid)
 
         #----------------------------------------------------------------
         # Draw additional text
