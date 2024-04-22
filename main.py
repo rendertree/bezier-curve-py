@@ -160,24 +160,28 @@ class Dropdown():
 class MenuBar():
     def __init__(self):
         self._flag_file             = False
-        self._flag_settings         = False
+        self._flag_mode             = False
         self._flag_view             = False
         self._file_rec              = Rectangle(0, 0, 50, 30)
-        self._settings_rec          = Rectangle(50, 0, 50, 30)
+        self._mode_rec              = Rectangle(50, 0, 50, 30)
         self._view_rec              = Rectangle(100, 0, 50, 30)
         self._file_item_num         = 2
-        self._settings_item_num     = 2
+        self._mode_item_num         = 4
         self._view_item_num         = 2
         self._file_str_item         = ["Export to PNG", "Exit"]
-        self._settings_str_item     = ["aa2", "bb2"]
+        self._mode_str_item         = ["Simple line", "Bézier curve", "3", "4"]
         self._view_str_item         = ["Windowed", "Fullscreen"]
         self._file_btn_on_press     = False
-        self._settings_btn_on_press = False
+        self._mode_btn_on_press     = False
         self._view_btn_on_press     = False
         self._is_fullscreen         = False
         
         # Only for some buttons
         self._view_btn_state = [False, True]
+
+        self._current_mode = 0
+    
+    def get_current_mode(self) -> int: return self._current_mode
 
     def draw(self):
         global g_should_close
@@ -209,16 +213,17 @@ class MenuBar():
         elif is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and self._flag_file:
             self._flag_file = not self._flag_file
 
-        # Settings
-        draw_button("Settings", self._settings_rec)
-        if self._flag_settings:
-            for i in range(0, self._settings_item_num):
-                draw_button(self._settings_str_item[i], Rectangle(self._settings_rec.x, self._settings_rec.y + 30 * (i + 1), self._settings_rec.width + 50, self._settings_rec.height))
+        # mode
+        draw_button("mode", self._mode_rec)
+        if self._flag_mode:
+            for i in range(0, self._mode_item_num):
+                on_press =  draw_button(self._mode_str_item[i], Rectangle(self._mode_rec.x, self._mode_rec.y + 30 * (i + 1), self._mode_rec.width + 50, self._mode_rec.height))
+                if (on_press): self._current_mode = i
 
-        if check_collision_point_rec(mouse_pos, self._settings_rec) and is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-            self._flag_settings = not self._flag_settings
-        elif is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and self._flag_settings:
-            self._flag_settings = not self._flag_settings
+        if check_collision_point_rec(mouse_pos, self._mode_rec) and is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+            self._flag_mode = not self._flag_mode
+        elif is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and self._flag_mode:
+            self._flag_mode = not self._flag_mode
 
         # View
         draw_button("View", self._view_rec)
@@ -240,6 +245,72 @@ class MenuBar():
             self._flag_view = not self._flag_view
         elif is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and self._flag_view:
             self._flag_view = not self._flag_view
+
+class SimpleLine(object):
+    def __init__(self, x0=0 , y0=0, x1=0 , y1=0):
+        self.x0 = x0
+        self.y0 = y0
+        self.x1 = x1
+        self.y1 = y1
+        self.dx = 0
+        self.dy = 0
+        self.p0 = Point(Vec2(x0, y0), int(20), BROWN, "P0")
+        self.p1 = Point(Vec2(x1, y1), int(20), BROWN, "P1")
+
+        self._points = [self.p0, self.p1]
+        self._point_radius = float(0.0)
+
+        self._is_dragging = False
+        
+        self._lock_id = int()
+
+        for i in range(0, 2):
+            self._points[i].id = i
+        
+        self.t = 0.0
+    
+    def update(self, camera):
+        #----------------------------------------------------------------
+        # Update the points position
+        mouse_pos = get_mouse_position()
+        world_mouse_pos = get_screen_to_world2d(mouse_pos, camera)
+
+        for point in self._points:
+            if self._is_dragging:
+                self._point_radius = point.size * 3.0
+            else:
+                self._point_radius = point.size
+
+            if check_collision_point_circle(world_mouse_pos, point.pos.rl_vec(), self._point_radius) and is_mouse_button_down(MOUSE_LEFT_BUTTON) and not self._is_dragging:
+                self._lock_id = point.id
+                if self._lock_id == point.id:
+                    self._is_dragging = True
+            
+            elif is_mouse_button_released(MOUSE_LEFT_BUTTON):
+                self._is_dragging = False
+                self._lock_id = -1
+
+            if self._is_dragging and point.id == self._lock_id:
+                point.pos.x = world_mouse_pos.x
+                point.pos.y = world_mouse_pos.y
+
+        self.x0 = self.p0.pos.x 
+        self.y0 = self.p0.pos.y
+        self.x1 = self.p1.pos.x 
+        self.y1 = self.p1.pos.y
+
+        self.t = self.t + 0.01
+
+        if (self.t > 1.0): self.t = 0.0 
+
+        self.dx = self.x0 + (self.x1 - self.x0) * self.t
+        self.dy = self.y0 + (self.y1 - self.y0) * self.t
+
+    def draw(self):
+        draw_line_ex(Vec2(self.x0, self.y0).rl_vec(), Vec2(self.x1, self.y1).rl_vec(), 7.0, LIGHTGRAY)
+        draw_line_ex(Vec2(self.x0, self.y0).rl_vec(), Vec2(self.dx, self.dy).rl_vec(), 7.0, RED)
+        self.p0.draw()
+        self.p1.draw()
 
 class BezierObject(object):
     def __init__(self):
@@ -341,8 +412,8 @@ class BezierObject(object):
                 self._points_lines_color_0 = self._colors[get_random_value(0, self._colors_length)]
                 self._points_lines_color_1 = self._colors[get_random_value(0, self._colors_length)]
             
-            draw_line_ex(start_pos.rl_vec(), end_pos.rl_vec(), 7.0, lines_color_0)
-            draw_line_ex(start_pos.rl_vec(), Vec2(dx, dy).rl_vec(), 0.9, lines_color_1)
+            draw_line_ex(start_pos.rl_vec(), end_pos.rl_vec(), 5.0, lines_color_0)
+            draw_line_ex(start_pos.rl_vec(), Vec2(dx, dy).rl_vec(), 3.0, lines_color_1)
 
         start_pos = points[0].pos
         steps = 100
@@ -575,6 +646,8 @@ class app():
         self.bezier_object = BezierObject()
 
         self.center_point = Vec2(0, 0)
+
+        self.simple_line = SimpleLine(0, 0, 100, 0)
     
     def _draw_grid(self):
         if self.is_draw_grid:
@@ -609,8 +682,13 @@ class app():
         draw_fps(self.screen_width - 80, 10)
 
     def update(self):
-        self.bezier_object.update(self.camera)
         self.camera.update(self.center_point.rl_vec())
+
+        if self.menu_bar.get_current_mode() == 0:
+            self.simple_line.update(self.camera)
+            
+        elif self.menu_bar.get_current_mode() == 1:
+            self.bezier_object.update(self.camera)
 
     def render(self):
         begin_drawing()
@@ -622,7 +700,11 @@ class app():
 
         #----------------------------------------------------------------
         # Draw the bezier object
-        self.bezier_object.draw_object()
+        if self.menu_bar.get_current_mode() == 0:
+            self.simple_line.draw()
+            
+        elif self.menu_bar.get_current_mode() == 1:
+            self.bezier_object.draw_object()
         
         self.camera.end_mode()
     
