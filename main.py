@@ -123,7 +123,7 @@ class RLCamera2D(Camera2D):
 
 class RLCamera3D(Camera3D):
     def __init__(self):
-        self.position   = Vector3(4.0, 4.0, 4.0)  
+        self.position   = Vector3(10.0, 10.0, 10.0)  
         self.target     = Vector3(0.0, 1.0, 0.0)    
         self.up         = Vector3(0.0, 1.0, 0.0)        
         self.fovy       = 45.0
@@ -756,6 +756,7 @@ class app():
         if self.menu_bar.get_current_mode() == 3:
             self.camera_3d.begin_mode()
             self.object_3d.draw()
+            draw_grid(40, 1.0)
             self.camera_3d.end_mode()
         else:
             self.camera_2d.begin_mode()
