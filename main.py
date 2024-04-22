@@ -98,7 +98,7 @@ class Slider():
     
         return slider_value
 
-class RLCamera(Camera2D):
+class RLCamera2D(Camera2D):
     def __init__(self):
         self.target   = Vec2(0, 0).rl_vec()
         self.offset   = Vec2(200.0, 200.0).rl_vec()
@@ -120,6 +120,26 @@ class RLCamera(Camera2D):
             self.zoom += 0.1
         if get_mouse_wheel_move() < 0.0 and self.zoom > 0.5:
             self.zoom -= 0.1
+
+class RLCamera3D(Camera3D):
+    def __init__(self):
+        self.position   = Vector3(4.0, 4.0, 4.0)  
+        self.target     = Vector3(0.0, 1.0, 0.0)    
+        self.up         = Vector3(0.0, 1.0, 0.0)        
+        self.fovy       = 45.0
+        self.type       = CAMERA_FREE
+
+    def begin_mode(self):
+        begin_mode3d(self)
+
+    def end_mode(self):
+        end_mode3d()
+
+        return self
+
+    def update(self):
+        if is_mouse_button_down(MOUSE_LEFT_BUTTON): 
+            update_camera(self, CAMERA_FREE)
 
 class Dropdown():
     def __init__(self, title_text, text_arr, item_num, rec):
@@ -169,7 +189,7 @@ class MenuBar():
         self._mode_item_num         = 4
         self._view_item_num         = 2
         self._file_str_item         = ["Export to PNG", "Exit"]
-        self._mode_str_item         = ["Simple line", "Bézier curve", "3", "4"]
+        self._mode_str_item         = ["Simple Line", "Bézier Curve", "2D Object", "3D Object"]
         self._view_str_item         = ["Windowed", "Fullscreen"]
         self._file_btn_on_press     = False
         self._mode_btn_on_press     = False
@@ -622,6 +642,35 @@ def draw_checkbox(text, rec, flag):
 
     return flag
 
+class Object3D(object):
+    def __init__(self):
+        pass
+
+    def update(self):
+        pass
+
+    def draw(self):
+        start_pos = Vector3(0.0, 1.0, 0.0)
+        end_pos = Vector3(0.0, 3.0, 0.0)
+        radius = 0.5
+        slices = 16
+        rings = 8
+        color = BLUE
+        draw_capsule(start_pos, end_pos, radius, slices, rings, color)
+
+class Object2D(object):
+    def __init__(self):
+        pass
+
+    def update(self):
+        pass
+
+    def draw(self):
+        vec0 = Vec2(400, 50).rl_vec()
+        vec1 = Vec2(150, 400).rl_vec()
+        vec2 = Vec2(650, 400).rl_vec()
+        draw_triangle(vec0, vec1, vec2, YELLOW)
+
 class app():
     def __init__(self):
         self.screen_width    = 1080
@@ -634,7 +683,8 @@ class app():
         init_window(self.screen_width, self.screen_height, "Bézier curve")
         set_target_fps(120)
 
-        self.camera = RLCamera()
+        self.camera_2d = RLCamera2D()
+        self.camera_3d = RLCamera3D()
     
         # Grid
         self.is_draw_grid = False
@@ -648,6 +698,10 @@ class app():
         self.center_point = Vec2(0, 0)
 
         self.simple_line = SimpleLine(0, 0, 100, 0)
+        
+        self.object_2d = Object2D()
+
+        self.object_3d = Object3D()
     
     def _draw_grid(self):
         if self.is_draw_grid:
@@ -682,13 +736,16 @@ class app():
         draw_fps(self.screen_width - 80, 10)
 
     def update(self):
-        self.camera.update(self.center_point.rl_vec())
+        if self.menu_bar.get_current_mode() == 3:
+            self.camera_3d.update()
+        else:
+            self.camera_2d.update(self.center_point.rl_vec())
 
-        if self.menu_bar.get_current_mode() == 0:
-            self.simple_line.update(self.camera)
-            
-        elif self.menu_bar.get_current_mode() == 1:
-            self.bezier_object.update(self.camera)
+            if self.menu_bar.get_current_mode() == 0:
+                self.simple_line.update(self.camera_2d)
+                
+            elif self.menu_bar.get_current_mode() == 1:
+                self.bezier_object.update(self.camera_2d)
 
     def render(self):
         begin_drawing()
@@ -696,17 +753,25 @@ class app():
 
         self._draw_gui0()
 
-        self.camera.begin_mode()
+        if self.menu_bar.get_current_mode() == 3:
+            self.camera_3d.begin_mode()
+            self.object_3d.draw()
+            self.camera_3d.end_mode()
+        else:
+            self.camera_2d.begin_mode()
 
-        #----------------------------------------------------------------
-        # Draw the bezier object
-        if self.menu_bar.get_current_mode() == 0:
-            self.simple_line.draw()
+            #----------------------------------------------------------------
+            # Draw the bezier object
+            if self.menu_bar.get_current_mode() == 0:
+                self.simple_line.draw()
+                
+            elif self.menu_bar.get_current_mode() == 1:
+                self.bezier_object.draw_object()
             
-        elif self.menu_bar.get_current_mode() == 1:
-            self.bezier_object.draw_object()
-        
-        self.camera.end_mode()
+            elif self.menu_bar.get_current_mode() == 2:
+                self.object_2d.draw()
+            
+            self.camera_2d.end_mode()
     
         self._draw_gui1()
 
