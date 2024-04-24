@@ -172,7 +172,7 @@ class Dropdown():
         self.rec            = rec
         self.current_item   = 0
         self._flag          = False
-        self._str_mode      = "Select Mode"
+        self._str_item      = "Select item"
 
     def draw(self):
         mouse_pos = get_mouse_position()
@@ -181,16 +181,16 @@ class Dropdown():
 
         if self._flag:
             for i in range(0, self.item_num):
-                draw_button(self._str_mode, Rectangle(self.rec.x, self.rec.y, self.rec.width, self.rec.height))
+                draw_button(self._str_item, Rectangle(self.rec.x, self.rec.y, self.rec.width, self.rec.height))
                 draw_rectangle_lines_ex(Rectangle(self.rec.x, self.rec.y, self.rec.width, self.rec.height), 1, BLACK)
                 draw_button(self.text_arr[i], Rectangle(self.rec.x, self.rec.y + 35 * (i + 1), self.rec.width, self.rec.height))
                 draw_rectangle_lines_ex(Rectangle(self.rec.x, self.rec.y + 35 * (i + 1), self.rec.width, self.rec.height), 1, BLACK)
 
                 if check_collision_point_rec(mouse_pos, Rectangle(self.rec.x, self.rec.y + 35 * (i + 1), self.rec.width, self.rec.height)) and is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
                     self.current_item = i
-                    self._str_mode = self.text_arr[i]
+                    self._str_item = self.text_arr[i]
         else:
-            draw_button(self._str_mode, Rectangle(self.rec.x, self.rec.y, self.rec.width, self.rec.height))
+            draw_button(self._str_item, Rectangle(self.rec.x, self.rec.y, self.rec.width, self.rec.height))
             draw_rectangle_lines_ex(Rectangle(self.rec.x, self.rec.y, self.rec.width, self.rec.height), 1, BLACK)
 
         if check_collision_point_rec(mouse_pos, self.rec) and is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
