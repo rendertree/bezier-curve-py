@@ -697,19 +697,106 @@ class Capsule(object):
         self.rings      = rings
         self.color      = color
 
+    def update(self, color):
+        self.color = color
+
     def draw(self):
         draw_capsule(self.start_pos, self.end_pos, self.radius, self.slices, self.rings, self.color)
 
-class Object3D(object):
-    def __init__(self):
-        self.capsule = Capsule()
 
-    def update(self):
-        pass
+class Cube(object):
+    def __init__(self, pos=Vector3(0, 0, 0), width=10, height=10, length=10, color=YELLOW):
+        self.pos    = pos
+        self.width  = width
+        self.height = height
+        self.length = length
+        self.color  = color
+
+    def update(self, color):
+        self.color = color
 
     def draw(self):
-        self.capsule.draw()
+        draw_cube(self.pos, self.width, self.height, self.length, self.color)
 
+
+class Sphere(object):
+    def __init__(self, pos=Vector3(0, 0, 0), radius=5, color=YELLOW):
+        self.pos = pos
+        self.radius = radius
+        self.color = color
+
+    def update(self, color):
+        self.color = color
+
+    def draw(self):
+        draw_sphere(self.pos, self.radius, self.color)
+
+
+class Object3D(object):
+    def __init__(self):
+        self.current_object = "Capsule"
+        self.objects = ["Capsule", "Cube", "Sphere"]
+        
+        self.colors = ["RED", "BLACK", "GREEN", "YELLOW", "BLUE", "GRAY", "PURPLE"]
+        self.str_current_color = "PURPLE"
+        self.current_color = YELLOW
+
+        self.capsule = Capsule()
+        self.cube = Cube()
+        self.sphere = Sphere()
+
+        self.object_3d_objects_dropdown = Dropdown("Object", self.objects, 3, Rectangle(120, 30, 100, 35))
+        self.object_3d_colors_dropdown = Dropdown("Color", self.colors, 7, Rectangle(230, 30, 100, 35))
+
+    def update(self):
+
+        # Current color
+
+        if self.str_current_color == "RED":
+            self.current_color = RED
+
+        elif self.str_current_color == "GREEN":
+            self.current_color = GREEN
+
+        elif self.str_current_color == "BLUE":
+            self.current_color = BLUE
+        
+        elif self.str_current_color == "YELLOW":
+            self.current_color = YELLOW
+        
+        elif self.str_current_color == "BLACK":
+            self.current_color = BLACK
+
+        elif self.str_current_color == "GRAY":
+            self.current_color = GRAY
+
+        elif self.str_current_color == "PURPLE":
+            self.current_color = PURPLE
+
+        # Update the object color
+
+        if self.current_object == "Capsule":
+            self.capsule.update(self.current_color)
+        
+        elif self.current_object == "Cube":
+            self.cube.update(self.current_color)
+        
+        elif self.current_object == "Sphere":
+            self.sphere.update(self.current_color)
+
+    def draw(self):
+        if self.current_object == "Capsule":
+            self.capsule.draw()
+
+        elif self.current_object == "Cube":
+            self.cube.draw()
+
+        elif self.current_object == "Sphere":
+            self.sphere.draw()
+
+    def draw_gui(self):
+        self.current_object = self.objects[self.object_3d_objects_dropdown.draw()]
+        self.str_current_color = self.colors[self.object_3d_colors_dropdown.draw()]
 
 # ----------------------------------------------------------------
 # Object2D
@@ -883,7 +970,7 @@ class app():
             self.is_draw_grid = draw_checkbox("Draw Grid", Rectangle(10, grid_checkbox_pos_y, 32, 32), self.is_draw_grid)
         
         #----------------------------------------------------------------
-        # Draw the bezier GUI
+        # Draw the GUI
         if self.menu_bar.get_current_mode() == 0:
             pass
 
@@ -892,6 +979,9 @@ class app():
         
         elif self.menu_bar.get_current_mode() == 2:
             self.object_2d.draw_gui()
+        
+        elif self.menu_bar.get_current_mode() == 3:
+            self.object_3d.draw_gui()
         
         #----------------------------------------------------------------
         # Draw the menu bar
@@ -906,6 +996,7 @@ class app():
     def update(self):
         if self.menu_bar.get_current_mode() == 3:
             self.camera_3d.update()
+            self.object_3d.update()
         else:
             self.camera_2d.update(self.center_point.rl_vec())
 
