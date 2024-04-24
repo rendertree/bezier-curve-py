@@ -22,6 +22,9 @@ from raylibpy import *
 
 g_should_close = False
 
+# ----------------------------------------------------------------
+# Point
+
 class Point:
     def __init__(self, pos, size, color, name):
         self.id    = 0
@@ -35,6 +38,10 @@ class Point:
         draw_circle(self.pos.x, self.pos.y, self.size, self.color)
         draw_text(self.name, self.pos.x - 5, self.pos.y - 5, 15, BLACK)
         draw_text(pos, self.pos.x + 25, self.pos.y + 10, 12, BLACK)
+
+
+# ----------------------------------------------------------------
+# Vec2
 
 class Vec2:
     def __init__(self, x=0, y=0):
@@ -70,7 +77,11 @@ class Vec2:
             )
         else:
             raise TypeError("Unsupported operand types for lerp: Vec2, " + str(type(other)) + ", " + str(type(t)))
-        
+
+
+# ----------------------------------------------------------------
+# Slider
+
 class Slider():
     def __init__(self, rec):
         self._is_dragging = False     
@@ -98,6 +109,10 @@ class Slider():
     
         return slider_value
 
+
+# ----------------------------------------------------------------
+# 2D Camera
+
 class RLCamera2D(Camera2D):
     def __init__(self):
         self.target   = Vec2(0, 0).rl_vec()
@@ -121,6 +136,10 @@ class RLCamera2D(Camera2D):
         if get_mouse_wheel_move() < 0.0 and self.zoom > 0.5:
             self.zoom -= 0.1
 
+
+# ----------------------------------------------------------------
+# 3D Camera
+
 class RLCamera3D(Camera3D):
     def __init__(self):
         self.position   = Vector3(10.0, 10.0, 10.0)  
@@ -140,6 +159,10 @@ class RLCamera3D(Camera3D):
     def update(self):
         if is_mouse_button_down(MOUSE_LEFT_BUTTON): 
             update_camera(self, CAMERA_FREE)
+
+
+# ----------------------------------------------------------------
+# Dropdown
 
 class Dropdown():
     def __init__(self, title_text, text_arr, item_num, rec):
@@ -176,6 +199,10 @@ class Dropdown():
             self._flag = not self._flag
 
         return self.current_item
+
+
+# ----------------------------------------------------------------
+# MenuBar
 
 class MenuBar():
     def __init__(self):
@@ -266,6 +293,10 @@ class MenuBar():
         elif is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and self._flag_view:
             self._flag_view = not self._flag_view
 
+
+# ----------------------------------------------------------------
+# SimpleLine
+
 class SimpleLine(object):
     def __init__(self, x0=0 , y0=0, x1=0 , y1=0):
         self.x0 = x0
@@ -331,6 +362,10 @@ class SimpleLine(object):
         draw_line_ex(Vec2(self.x0, self.y0).rl_vec(), Vec2(self.dx, self.dy).rl_vec(), 7.0, RED)
         self.p0.draw()
         self.p1.draw()
+
+
+# ----------------------------------------------------------------
+# BezierObject
 
 class BezierObject(object):
     def __init__(self):
@@ -645,6 +680,10 @@ def draw_checkbox(text, rec, flag):
 
     return flag
 
+
+# ----------------------------------------------------------------
+# Object3D
+
 class Object3D(object):
     def __init__(self):
         pass
@@ -661,18 +700,120 @@ class Object3D(object):
         color = BLUE
         draw_capsule(start_pos, end_pos, radius, slices, rings, color)
 
-class Object2D(object):
-    def __init__(self):
-        pass
 
-    def update(self):
-        pass
+# ----------------------------------------------------------------
+# Object2D
+
+class Circle():
+    def __init__(self, x, y, radius, color):
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.color = color
+    
+    def update(self, color):
+        self.color = color
 
     def draw(self):
-        vec0 = Vec2(400, 50).rl_vec()
-        vec1 = Vec2(150, 400).rl_vec()
-        vec2 = Vec2(650, 400).rl_vec()
-        draw_triangle(vec0, vec1, vec2, YELLOW)
+        draw_circle(self.x, self.y, self.radius, self.color)
+
+
+class Rec():
+    def __init__(self, rec, color):
+        self.rec = rec
+        self.color = color
+    
+    def update(self, color):
+        self.color = color
+
+    def draw(self):
+        draw_rectangle_rec(self.rec, self.color)
+
+
+class Triangle():
+    def __init__(self, vec0, vec1, vec2, color):
+        self.vec0 = vec0
+        self.vec1 = vec1
+        self.vec2 = vec2
+        self.color = color
+
+    def update(self, color):
+        self.color = color
+
+    def draw(self):
+        draw_triangle(self.vec0.rl_vec(), self.vec1.rl_vec(), self.vec2.rl_vec(), self.color)
+
+
+class Object2D(object):
+    def __init__(self):
+        self.shapes = ["Rectangle", "Circle", "Triangle"]
+        self.colors = ["RED", "BLACK", "GREEN", "YELLOW", "BLUE", "GRAY", "PURPLE"]
+        self.triangle_vec = [Vector2, Vector2, Vector2]
+        self.rectangle_rec = Rectangle(20, 20, 40, 40)
+
+        self.circle = Circle(12, 12, 4, PURPLE)
+        self.rectangle = Rec(Rectangle(20, 20, 40, 40), PURPLE)
+        self.triangle = Triangle(Vec2(400, 50), Vec2(150, 400), Vec2(650, 400), PURPLE)
+
+        self.current_shape = "Triangle"
+        self.current_color = PURPLE
+        self.str_current_color = "PURPLE"
+
+        self.object_2d_shapes_dropdown = Dropdown("Shape", self.shapes, 3, Rectangle(120, 30, 100, 35))
+        self.object_2d_colors_dropdown = Dropdown("Color", self.colors, 7, Rectangle(230, 30, 100, 35))
+
+    def update(self):
+
+        # Current color
+
+        if self.str_current_color == "RED":
+            self.current_color = RED
+
+        elif self.str_current_color == "GREEN":
+            self.current_color = GREEN
+
+        elif self.str_current_color == "BLUE":
+            self.current_color = BLUE
+        
+        elif self.str_current_color == "YELLOW":
+            self.current_color = YELLOW
+        
+        elif self.str_current_color == "BLACK":
+            self.current_color = BLACK
+
+        elif self.str_current_color == "GRAY":
+            self.current_color = GRAY
+
+        elif self.str_current_color == "PURPLE":
+            self.current_color = PURPLE
+
+        # Update the object color
+
+        if self.current_shape == "Rectangle":
+            self.rectangle.update(self.current_color)
+        
+        elif self.current_shape == "Circle":
+            self.circle.update(self.current_color)
+
+        elif self.current_shape == "Triangle":
+           self.triangle.update(self.current_color)
+
+    def draw(self):
+        if self.current_shape == "Rectangle":
+            self.rectangle.draw()
+        
+        elif self.current_shape == "Circle":
+            self.circle.draw()
+
+        elif self.current_shape == "Triangle":
+           self.triangle.draw()
+
+    def draw_gui(self):
+        self.current_shape = self.shapes[self.object_2d_shapes_dropdown.draw()]
+        self.str_current_color = self.colors[self.object_2d_colors_dropdown.draw()]
+
+# ----------------------------------------------------------------
+# app
 
 class app():
     def __init__(self):
@@ -706,6 +847,7 @@ class app():
         
         # 2D object
         self.object_2d = Object2D()
+        self.object_2d_current_object = "Triangle"
 
         # 3D object
         self.object_3d = Object3D()
@@ -732,8 +874,14 @@ class app():
         
         #----------------------------------------------------------------
         # Draw the bezier GUI
-        if self.menu_bar.get_current_mode() == 1:
+        if self.menu_bar.get_current_mode() == 0:
+            pass
+
+        elif self.menu_bar.get_current_mode() == 1:
             self.bezier_object.draw_gui()
+        
+        elif self.menu_bar.get_current_mode() == 2:
+            self.object_2d.draw_gui()
         
         #----------------------------------------------------------------
         # Draw the menu bar
@@ -756,6 +904,9 @@ class app():
                 
             elif self.menu_bar.get_current_mode() == 1:
                 self.bezier_object.update(self.camera_2d)
+            
+            elif self.menu_bar.get_current_mode() == 2:
+                self.object_2d.update()
 
     def render(self):
         begin_drawing()
