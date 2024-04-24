@@ -20,7 +20,45 @@
 
 from raylibpy import *
 
-g_should_close = False
+g_app_should_close = False
+
+def draw_button(text, button_rec, is_clickable=True):
+        mouse_pos = get_mouse_position()
+        is_mouse_over = check_collision_point_rec(mouse_pos, button_rec)
+
+        text_x = button_rec.x + (button_rec.width - measure_text(text, 11)) / 2
+        text_y = button_rec.y + (button_rec.height - 11) / 2
+
+        rec_color = DARKBROWN if is_mouse_over else LIGHTGRAY
+        
+        text_color = BLACK
+        if is_clickable:
+            text_color = BLACK if is_mouse_over else DARKGRAY
+        else:
+            text_color = GRAY
+
+        draw_rectangle_rec(button_rec, rec_color)
+        draw_text(text, text_x, text_y, 11, text_color)
+
+        return is_clickable and is_mouse_over and is_mouse_button_pressed(MOUSE_LEFT_BUTTON)
+
+def draw_checkbox(text, rec, flag):
+    mouse_pos = get_mouse_position()
+    is_mouse_over = check_collision_point_rec(mouse_pos, rec)
+
+    if is_mouse_over:
+        draw_rectangle_rec(rec, LIGHTGRAY)
+
+    if flag:
+        draw_rectangle_rec(rec, GRAY)
+
+    draw_rectangle_lines_ex(rec, 1.2, BLACK)
+    draw_text(text, rec.x + 35, rec.y + 20, 12, BLACK)
+
+    if is_mouse_over and is_mouse_button_pressed(MOUSE_LEFT_BUTTON):
+        flag = not flag
+
+    return flag
 
 # ----------------------------------------------------------------
 # Point
@@ -105,7 +143,7 @@ class Slider():
             self._is_dragging = False
             
         draw_rectangle_rec(self.rec, LIGHTGRAY)
-        draw_rectangle(self.rec.x + int(slider_value * self.rec.width) - 10, self.rec.y, 20, self.rec.height, DARKPURPLE)
+        draw_rectangle(self.rec.x + int(slider_value * self.rec.width) - 10, self.rec.y, 10, self.rec.height, GRAY)
     
         return slider_value
 
@@ -231,7 +269,7 @@ class MenuBar():
     def get_current_mode(self) -> int: return self._current_mode
 
     def draw(self):
-        global g_should_close
+        global g_app_should_close
         mouse_pos = get_mouse_position()
 
         #----------------------------------------------------------------
@@ -253,7 +291,7 @@ class MenuBar():
                     take_screenshot("screenshot.png")
 
                 if self._file_btn_on_press and i == 1:
-                    g_should_close = True
+                    g_app_should_close = True
 
         if check_collision_point_rec(mouse_pos, self._file_rec) and is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
             self._flag_file = not self._flag_file
@@ -399,7 +437,7 @@ class BezierObject(object):
         self._at = 0.0 # Automatic "t"
         self._mt = 0.0 # Manual "t"
 
-        self._slider_mt_pos = Vec2(50, get_screen_height() / 2)
+        self._slider_mt_pos = Vec2(10, get_screen_height() / 2)
         self._slider_mt = Slider(Rectangle(self._slider_mt_pos.x, self._slider_mt_pos.y, 150, 30))
 
         # Objects colors
@@ -642,44 +680,6 @@ class BezierObject(object):
         if self._is_ball_pause:
             draw_text("Paused", get_screen_width() / 2 - 100, 50, 44, RED)
 
-def draw_button(text, button_rec, is_clickable=True):
-        mouse_pos = get_mouse_position()
-        is_mouse_over = check_collision_point_rec(mouse_pos, button_rec)
-
-        text_x = button_rec.x + (button_rec.width - measure_text(text, 11)) / 2
-        text_y = button_rec.y + (button_rec.height - 11) / 2
-
-        rec_color = DARKBROWN if is_mouse_over else LIGHTGRAY
-        
-        text_color = BLACK
-        if is_clickable:
-            text_color = BLACK if is_mouse_over else DARKGRAY
-        else:
-            text_color = GRAY
-
-        draw_rectangle_rec(button_rec, rec_color)
-        draw_text(text, text_x, text_y, 11, text_color)
-
-        return is_clickable and is_mouse_over and is_mouse_button_pressed(MOUSE_LEFT_BUTTON)
-
-def draw_checkbox(text, rec, flag):
-    mouse_pos = get_mouse_position()
-    is_mouse_over = check_collision_point_rec(mouse_pos, rec)
-
-    if is_mouse_over:
-        draw_rectangle_rec(rec, LIGHTGRAY)
-
-    if flag:
-        draw_rectangle_rec(rec, DARKBLUE)
-
-    draw_rectangle_lines_ex(rec, 4, BLACK)
-    draw_text(text, rec.x + 35, rec.y + 20, 12, BLACK)
-
-    if is_mouse_over and is_mouse_button_pressed(MOUSE_LEFT_BUTTON):
-        flag = not flag
-
-    return flag
-
 
 # ----------------------------------------------------------------
 # Object3D
@@ -921,7 +921,7 @@ class app():
         self.grid_size       = 80
 
         set_config_flags(FLAG_MSAA_4X_HINT)
-        init_window(self.screen_width, self.screen_height, "Bézier curve")
+        init_window(self.screen_width, self.screen_height, "")
         set_target_fps(120)
 
         self.camera_2d = RLCamera2D()
@@ -948,9 +948,11 @@ class app():
 
         # 3D object
         self.object_3d = Object3D()
+
+        self.is_3d_mode = False
     
     def _draw_grid(self):
-        if self.is_draw_grid:
+        if self.is_draw_grid and not self.is_3d_mode:
             for x in range(-self.world_width // 2, (self.world_width // 2) + 1, self.grid_size):
                 draw_line(x, -self.world_height // 2, x, self.world_height // 2, DARKGRAY)
 
@@ -988,15 +990,15 @@ class app():
         self.menu_bar.draw()
 
         #----------------------------------------------------------------
-        # Draw additional text
-        draw_text("Bézier curve", self.screen_width - 220, self.screen_height - 80, 24, BLACK)
-        draw_text("by Wildan R Wijanarko",  self.screen_width - 200, self.screen_height - 50, 12, BLACK)
+        # Draw FPS
         draw_fps(self.screen_width - 80, 10)
 
     def update(self):
         if self.menu_bar.get_current_mode() == 3:
             self.camera_3d.update()
             self.object_3d.update()
+
+            self.is_3d_mode = True
         else:
             self.camera_2d.update(self.center_point.rl_vec())
 
@@ -1008,6 +1010,8 @@ class app():
             
             elif self.menu_bar.get_current_mode() == 2:
                 self.object_2d.update()
+
+            self.is_3d_mode = False
 
     def render(self):
         begin_drawing()
@@ -1046,7 +1050,7 @@ class app():
 if __name__ == '__main__':
     _app_ = app()
     
-    while not window_should_close() and not g_should_close:
+    while not window_should_close() and not g_app_should_close:
         _app_.update()
         _app_.render()
 
