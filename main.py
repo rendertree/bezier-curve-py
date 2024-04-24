@@ -684,7 +684,7 @@ def draw_checkbox(text, rec, flag):
 # ----------------------------------------------------------------
 # Object3D
 
-class Capsule3D(object):
+class Capsule(object):
     def __init__(
         self, start_pos=Vector3(0.0, 1.0, 0.0), 
         end_pos=Vector3(0.0, 3.0, 0.0), 
@@ -702,7 +702,7 @@ class Capsule3D(object):
 
 class Object3D(object):
     def __init__(self):
-        self.capsule = Capsule3D()
+        self.capsule = Capsule()
 
     def update(self):
         pass
