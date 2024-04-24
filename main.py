@@ -684,21 +684,31 @@ def draw_checkbox(text, rec, flag):
 # ----------------------------------------------------------------
 # Object3D
 
+class Capsule3D(object):
+    def __init__(
+        self, start_pos=Vector3(0.0, 1.0, 0.0), 
+        end_pos=Vector3(0.0, 3.0, 0.0), 
+        radius=0.5, slices=16, rings=8, color=YELLOW):
+        
+        self.start_pos  = start_pos
+        self.end_pos    = end_pos
+        self.radius     = radius
+        self.slices     = slices
+        self.rings      = rings
+        self.color      = color
+
+    def draw(self):
+        draw_capsule(self.start_pos, self.end_pos, self.radius, self.slices, self.rings, self.color)
+
 class Object3D(object):
     def __init__(self):
-        pass
+        self.capsule = Capsule3D()
 
     def update(self):
         pass
 
     def draw(self):
-        start_pos = Vector3(0.0, 1.0, 0.0)
-        end_pos = Vector3(0.0, 3.0, 0.0)
-        radius = 0.5
-        slices = 16
-        rings = 8
-        color = BLUE
-        draw_capsule(start_pos, end_pos, radius, slices, rings, color)
+        self.capsule.draw()
 
 
 # ----------------------------------------------------------------
