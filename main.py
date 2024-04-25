@@ -118,9 +118,9 @@ class Vec2:
 
 
 # ----------------------------------------------------------------
-# Slider
+# SimpleSlider
 
-class Slider():
+class SimpleSlider():
     def __init__(self, rec):
         self._is_dragging = False     
         self.rec = rec
@@ -146,6 +146,51 @@ class Slider():
         draw_rectangle(self.rec.x + int(slider_value * self.rec.width) - 10, self.rec.y, 10, self.rec.height, GRAY)
     
         return slider_value
+
+
+
+# ----------------------------------------------------------------
+# ProSlider
+
+class ProSilder():
+    def __init__(self, bounds, text_left, text_right, value_ref, min_value, max_value, slider_width):
+        self.bounds         = bounds
+        self.text_left      = text_left
+        self.text_right     = text_right
+        self.value_ref      = value_ref
+        self.min_value      = min_value
+        self.max_value      = max_value
+        self.slider_width   = slider_width
+
+    def draw(self):
+        # Get the current mouse position and mouse button states
+        mouse_pos = get_mouse_position()
+        mouse_pressed = is_mouse_button_down(MOUSE_BUTTON_LEFT)
+
+        # Calculate handle position based on the current value
+        handle_pos = ((self.value_ref[0] - self.min_value) / (self.max_value - self.min_value)) * (self.bounds.width - self.slider_width)
+        handle_rec = Rectangle(self.bounds.x + handle_pos, self.bounds.y, self.slider_width, self.bounds.height)
+
+        # Check if the mouse is over the slider handle
+        is_over_handle = check_collision_point_rec(mouse_pos, handle_rec)
+        
+        # Manage the state based on mouse interaction
+        if mouse_pressed and is_over_handle:
+            self.value_ref[0] = self.min_value + ((mouse_pos.x - self.bounds.x - self.slider_width / 2) / (self.bounds.width - self.slider_width)) * (self.max_value - self.min_value)
+            self.value_ref[0] = clamp(self.value_ref[0], self.min_value, self.max_value)
+
+        # Drawing the slider background and handle
+        draw_rectangle_rec(self.bounds, LIGHTGRAY)  # Slider background
+        draw_rectangle_rec(handle_rec, MAROON if is_over_handle and mouse_pressed else DARKGRAY)  # Slider handle
+
+        # Drawing text if provided
+        if self.text_left:
+            draw_text(self.text_left, self.bounds.x - measure_text(self.text_left, 10) - 20, int(self.bounds.y + self.bounds.height / 2 - 10), 10, BLACK)
+        if self.text_right:
+            draw_text(self.text_right, self.bounds.x + self.bounds.width + 20, int(self.bounds.y + self.bounds.height / 2 - 10), 10, BLACK)
+
+        return self.value_ref[0]
+
 
 
 # ----------------------------------------------------------------
@@ -438,7 +483,7 @@ class BezierObject(object):
         self._mt = 0.0 # Manual "t"
 
         self._slider_mt_pos = Vec2(10, get_screen_height() / 2)
-        self._slider_mt = Slider(Rectangle(self._slider_mt_pos.x, self._slider_mt_pos.y, 150, 30))
+        self._slider_mt = SimpleSlider(Rectangle(self._slider_mt_pos.x, self._slider_mt_pos.y, 150, 30))
 
         # Objects colors
         self._colors = [BLACK, RED, GREEN, BLUE, YELLOW, BROWN, LIME, PINK, PURPLE, GOLD, DARKBLUE, DARKPURPLE, DARKGRAY]
@@ -859,6 +904,10 @@ class Object2D(object):
         self.object_2d_shapes_dropdown = Dropdown("Shape", self.shapes, 3, Rectangle(120, 30, 100, 35))
         self.object_2d_colors_dropdown = Dropdown("Color", self.colors, 7, Rectangle(230, 30, 100, 35))
 
+        slider_pos_x = get_screen_width() - 120
+        self.pos_slider_pos_x = ProSilder(Rectangle(slider_pos_x, 140, 100, 10), "PosX:", "", [50.0], -200.0, 500.0, 10)
+        self.pos_slider_pos_y = ProSilder(Rectangle(slider_pos_x, 160, 100, 10), "PosY:", "", [50.0], -200.0, 500.0, 10)
+
     def update(self):
 
         # Current color
@@ -908,6 +957,17 @@ class Object2D(object):
     def draw_gui(self):
         self.current_shape = self.shapes[self.object_2d_shapes_dropdown.draw()]
         self.str_current_color = self.colors[self.object_2d_colors_dropdown.draw()]
+
+        if self.current_shape == "Rectangle":
+            self.rectangle.rec.x = self.pos_slider_pos_x.draw()
+            self.rectangle.rec.y = self.pos_slider_pos_y.draw()
+        
+        elif self.current_shape == "Circle":
+            self.circle.x = self.pos_slider_pos_x.draw()
+            self.circle.y = self.pos_slider_pos_y.draw()
+
+        elif self.current_shape == "Triangle":
+            pass
 
 # ----------------------------------------------------------------
 # app
