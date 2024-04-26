@@ -42,6 +42,8 @@ def draw_button(text, button_rec, is_clickable=True):
 
         return is_clickable and is_mouse_over and is_mouse_button_pressed(MOUSE_LEFT_BUTTON)
 
+
+
 def draw_checkbox(text, rec, flag):
     mouse_pos = get_mouse_position()
     is_mouse_over = check_collision_point_rec(mouse_pos, rec)
@@ -59,6 +61,8 @@ def draw_checkbox(text, rec, flag):
         flag = not flag
 
     return flag
+
+
 
 # ----------------------------------------------------------------
 # Point
@@ -78,6 +82,7 @@ class Point:
         draw_text(pos, self.pos.x + 25, self.pos.y + 10, 12, BLACK)
 
 
+
 # ----------------------------------------------------------------
 # Vec2
 
@@ -85,27 +90,44 @@ class Vec2:
     def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
-    
+
+    def __repr__(self):
+        return f"Vec2({self.x}, {self.y})"
+
     def __add__(self, other):
         if isinstance(other, Vec2):
             return Vec2(self.x + other.x, self.y + other.y)
         else:
-            raise TypeError("Unsupported operand type for +: Vec2 and " + str(type(other)))
+            raise TypeError("Unsupported operand type for +: 'Vec2' and '{}'".format(type(other).__name__))
 
     def __sub__(self, other):
         if isinstance(other, Vec2):
             return Vec2(self.x - other.x, self.y - other.y)
         else:
-            raise TypeError("Unsupported operand type for -: Vec2 and " + str(type(other)))
+            raise TypeError("Unsupported operand type for -: 'Vec2' and '{}'".format(type(other).__name__))
 
     def __mul__(self, other):
         if isinstance(other, (int, float)):
             return Vec2(self.x * other, self.y * other)
+        elif isinstance(other, Vec2):
+            return self.x * other.x + self.y * other.y  # Dot product
         else:
-            raise TypeError("Unsupported operand type for *: Vec2 and " + str(type(other)))
+            raise TypeError("Unsupported operand type for *: 'Vec2' and '{}'".format(type(other).__name__))
 
-    def rl_vec(self):
-        return Vector2(self.x, self.y)
+    def __truediv__(self, other):
+        if isinstance(other, (int, float)):
+            return Vec2(self.x / other, self.y / other)
+        else:
+            raise TypeError("Unsupported operand type for /: 'Vec2' and '{}'".format(type(other).__name__))
+
+    def magnitude(self):
+        return (self.x**2 + self.y**2) ** 0.5
+
+    def normalize(self):
+        mag = self.magnitude()
+        if mag == 0:
+            raise ValueError("Cannot normalize a zero vector")
+        return Vec2(self.x / mag, self.y / mag)
 
     def lerp(self, other, t):
         if isinstance(other, Vec2) and isinstance(t, (int, float)):
@@ -114,8 +136,145 @@ class Vec2:
                 self.y + (other.y - self.y) * t
             )
         else:
-            raise TypeError("Unsupported operand types for lerp: Vec2, " + str(type(other)) + ", " + str(type(t)))
+            raise TypeError("Unsupported operand types for lerp: 'Vec2', '{}', '{}'".format(type(other).__name__, type(t).__name__))
 
+    def to_tuple(self):
+        return (self.x, self.y)
+
+    def distance_to(self, other):
+        if isinstance(other, Vec2):
+            return ((other.x - self.x)**2 + (other.y - self.y)**2) ** 0.5
+        else:
+            raise TypeError("Unsupported operand type for distance_to: 'Vec2' and '{}'".format(type(other).__name__))
+
+    def rl_vec(self):
+        return Vector2(self.x, self.y)
+
+
+
+# ----------------------------------------------------------------
+# Vec3
+
+class Vec3:
+    def __init__(self, x=0, y=0, z=0):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def __repr__(self):
+        return f"Vec3({self.x}, {self.y}, {self.z})"
+
+    def __add__(self, other):
+        if isinstance(other, Vec3):
+            return Vec3(self.x + other.x, self.y + other.y, self.z + other.z)
+        else:
+            raise TypeError("Unsupported operand type for +: 'Vec3' and '{}'".format(type(other).__name__))
+
+    def __sub__(self, other):
+        if isinstance(other, Vec3):
+            return Vec3(self.x - other.x, self.y - other.y, self.z - other.z)
+        else:
+            raise TypeError("Unsupported operand type for -: 'Vec3' and '{}'".format(type(other).__name__))
+
+    def __mul__(self, other):
+        if isinstance(other, (int, float)):
+            return Vec3(self.x * other, self.y * other, self.z * other)
+        else:
+            raise TypeError("Unsupported operand type for *: 'Vec3' and '{}'".format(type(other).__name__))
+
+    def __truediv__(self, other):
+        if isinstance(other, (int, float)):
+            if other == 0:
+                raise ValueError("Cannot divide by zero.")
+            return Vec3(self.x / other, self.y / other, self.z / other)
+        else:
+            raise TypeError("Unsupported operand type for /: 'Vec3' and '{}'".format(type(other).__name__))
+
+    def magnitude(self):
+        return (self.x**2 + self.y**2 + self.z**2) ** 0.5
+
+    def normalize(self):
+        mag = self.magnitude()
+        if mag == 0:
+            raise ValueError("Cannot normalize a zero vector")
+        return Vec3(self.x / mag, self.y / mag, self.z / mag)
+
+    def to_tuple(self):
+        return (self.x, self.y, self.z)
+
+    def distance_to(self, other):
+        if isinstance(other, Vec3):
+            return ((other.x - self.x)**2 + (other.y - self.y)**2 + (other.z - self.z)**2) ** 0.5
+        else:
+            raise TypeError("Unsupported operand type for distance_to: 'Vec3' and '{}'".format(type(other).__name__))
+
+    def rl_vec(self):
+        return Vector3(self.x, self.y, self.z)
+
+
+
+# ----------------------------------------------------------------
+# Quat
+
+class Quat:
+    def __init__(self, w=1, x=0, y=0, z=0):
+        self.w = w
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def __repr__(self):
+        return f"Quat({self.w}, {self.x}, {self.y}, {self.z})"
+
+    def __add__(self, other):
+        if isinstance(other, Quat):
+            return Quat(self.w + other.w, self.x + other.x, self.y + other.y, self.z + other.z)
+        else:
+            raise TypeError("Unsupported operand type for +: 'Quat' and '{}'".format(type(other).__name__))
+
+    def __mul__(self, other):
+        if isinstance(other, Quat):
+            w = self.w * other.w - self.x * other.x - self.y * other.y - self.z * other.z
+            x = self.w * other.x + self.x * other.w + self.y * other.z - self.z * other.y
+            y = self.w * other.y - self.x * other.z + self.y * other.w + self.z * other.x
+            z = self.w * other.z + self.x * other.y - self.y * other.x + self.z * other.w
+            return Quat(w, x, y, z)
+        elif isinstance(other, (int, float)):
+            return Quat(self.w * other, self.x * other, self.y * other, self.z * other)
+        else:
+            raise TypeError("Unsupported operand type for *: 'Quat' and '{}'".format(type(other).__name__))
+
+    def magnitude(self):
+        return (self.w**2 + self.x**2 + self.y**2 + self.z**2) ** 0.5
+
+    def normalize(self):
+        mag = self.magnitude()
+        if mag == 0:
+            raise ValueError("Cannot normalize a zero quaternion")
+        return Quat(self.w / mag, self.x / mag, self.y / mag, self.z / mag)
+
+    def to_tuple(self):
+        return (self.w, self.x, self.y, self.z)
+
+    def rl_quat(self):
+        return Quaternion(self.w, self.x, self.y, self.z)
+
+# ----------------------------------------------------------------
+# Matrix transform
+
+def matrix_translate_v(vec_pos: Vec3) -> Matrix: return matrix_translate(vec_pos.x, vec_pos.y, vec_pos.z)
+def matrix_scale_v(vec_scale: Vec3) -> Matrix: return matrix_translate(vec_scale.x, vec_scale.y, vec_scale.z)
+
+class Transform3D():
+    def __init__(self, pos: Vec3=Vec3(), rot: Quat=Quat(), scale: Vec3=Vec3()):
+        self.pos: Vec3   = pos
+        self.rot: Quat   = rot
+        self.scale: Vec3 = scale
+
+    def to_matrix(self) -> Matrix:
+        def _mul(a, b) -> Matrix: return matrix_multiply(a, b)
+
+        return _mul(_mul(matrix_translate_v(self.pos), quaternion_to_matrix(self.rot.rl_quat())), matrix_scale_v(self.scale))
 
 # ----------------------------------------------------------------
 # SimpleSlider
@@ -152,7 +311,7 @@ class SimpleSlider():
 # ----------------------------------------------------------------
 # ProSlider
 
-class ProSilder():
+class ProSlider():
     def __init__(self, bounds, text_left, text_right, value_ref, min_value, max_value, slider_width):
         self.bounds         = bounds
         self.text_left      = text_left
@@ -793,7 +952,17 @@ class Object3D(object):
         self.object_3d_objects_dropdown = Dropdown("Object", self.objects, 3, Rectangle(120, 30, 100, 35))
         self.object_3d_colors_dropdown = Dropdown("Color", self.colors, 7, Rectangle(230, 30, 100, 35))
 
+        self.transform = Transform3D()
+
     def update(self):
+        if not is_mouse_button_down(MOUSE_BUTTON_LEFT):
+            if is_key_down(KEY_A): self.transform.pos.x -= 0.05
+            if is_key_down(KEY_D): self.transform.pos.x += 0.05
+            if is_key_down(KEY_W): self.transform.pos.z += 0.05
+            if is_key_down(KEY_S): self.transform.pos.z -= 0.05
+
+            if is_key_down(KEY_UP): self.transform.pos.y -= 0.05
+            if is_key_down(KEY_DOWN): self.transform.pos.y += 0.05
 
         # Current color
 
@@ -830,6 +999,8 @@ class Object3D(object):
             self.sphere.update(self.current_color)
 
     def draw(self):
+        rl_push_matrix()
+        rl_mult_matrixf(matrix_to_float_v(self.transform.to_matrix()).v)
         if self.current_object == "Capsule":
             self.capsule.draw()
 
@@ -838,10 +1009,13 @@ class Object3D(object):
 
         elif self.current_object == "Sphere":
             self.sphere.draw()
+        rl_pop_matrix()
 
     def draw_gui(self):
         self.current_object = self.objects[self.object_3d_objects_dropdown.draw()]
         self.str_current_color = self.colors[self.object_3d_colors_dropdown.draw()]
+
+        
 
 # ----------------------------------------------------------------
 # Object2D
@@ -905,8 +1079,8 @@ class Object2D(object):
         self.object_2d_colors_dropdown = Dropdown("Color", self.colors, 7, Rectangle(230, 30, 100, 35))
 
         slider_pos_x = get_screen_width() - 120
-        self.pos_slider_pos_x = ProSilder(Rectangle(slider_pos_x, 140, 100, 10), "PosX:", "", [50.0], -200.0, 500.0, 10)
-        self.pos_slider_pos_y = ProSilder(Rectangle(slider_pos_x, 160, 100, 10), "PosY:", "", [50.0], -200.0, 500.0, 10)
+        self.pos_slider_pos_x = ProSlider(Rectangle(slider_pos_x, 140, 100, 10), "PosX:", "", [50.0], -200.0, 500.0, 10)
+        self.pos_slider_pos_y = ProSlider(Rectangle(slider_pos_x, 160, 100, 10), "PosY:", "", [50.0], -200.0, 500.0, 10)
 
     def update(self):
 
